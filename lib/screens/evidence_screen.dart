@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/empty_state.dart';
+import '../widgets/screen_title.dart';
 
 /// Evidence Locker tab (mockup screen 5). Phase 1 ships the shell and empty
 /// state; hashed/timestamped document storage lands in Phase 6.
@@ -10,7 +11,7 @@ class EvidenceScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Evidence Locker')),
+      appBar: AppBar(title: const ScreenTitle('Evidence Locker')),
       body: EmptyState(
         icon: Icons.lock_outline_rounded,
         title: 'No evidence yet',
