@@ -39,6 +39,9 @@ dependencies:
   # later phases). Fonts are cached on-device after first load.
   google_fonts: ^6.2.1
 
+  # Indian-style number grouping (₹92,480 not ₹92480).
+  intl: ^0.20.2
+
   # Local-first SQLite database (Order/Expense/Shift/Evidence/Letter records).
   drift: ^2.22.1
   sqlite3_flutter_libs: ^0.5.28
