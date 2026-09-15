@@ -12,7 +12,7 @@
 | Framework | Flutter | Single codebase, best fit for a first-time mobile builder, matches research.md |
 | Platform | Android only (MVP) | Target users (delivery riders) are overwhelmingly Android; iOS is phase 2+ |
 | Local data | SQLite via `drift` | Local-first, offline-first, no backend needed until Phase 9 |
-| Screenshot parsing | Gemini 2.5 Flash (vision API) | Cheapest per-image cost, strong at reading Indian-script UI screenshots |
+| Screenshot parsing | Gemini 3.5 Flash-Lite (vision API) | Reads screenshots accurately; switched from the full Flash model in Phase 2 after hitting its free tier's 20-requests/day cap — Flash-Lite's free quota is far higher |
 | Voice cost entry | Android native speech-to-text | Free, no key, no account, works immediately |
 | Backend | Supabase, deferred to Phase 9 | Local-first first; sync/pay-index are additive, not required for MVP value |
 | Design system | Exact match to provided mockup | User requirement: pixel-fidelity, no overflow/hidden content on any screen size |

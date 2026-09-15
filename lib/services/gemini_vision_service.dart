@@ -19,13 +19,24 @@ class GeminiRequestException implements Exception {
   String toString() => 'GeminiRequestException: $message';
 }
 
+/// Internal only: a failure worth retrying (timeout, network blip, 429/5xx).
+/// Never escapes [GeminiVisionService] — callers only ever see
+/// [GeminiRequestException] once retries are exhausted.
+class _RetryableGeminiException implements Exception {
+  _RetryableGeminiException(this.message);
+  final String message;
+}
+
 /// Sends one delivery-partner-app screenshot to Gemini and gets back a
 /// structured order record. Screenshot bytes are sent for this single
 /// call only and are not persisted anywhere server-side by this app.
 class GeminiVisionService {
-  // Pinned rather than an alias like gemini-flash-latest: aliases can return
-  // 503 under load, and pinning keeps behavior stable as newer models ship.
-  static const _model = 'gemini-3.5-flash';
+  // The full "flash" model's free tier is capped at 20 requests/DAY, which
+  // this app blew through in a single testing session (confirmed via the
+  // API's RESOURCE_EXHAUSTED/GenerateRequestsPerDayPerProjectPerModel-FreeTier
+  // error). "flash-lite" has a much higher free quota and reads these
+  // screenshots just as accurately — verified directly against a test image.
+  static const _model = 'gemini-3.5-flash-lite';
   static const _endpoint =
       'https://generativelanguage.googleapis.com/v1beta/models/$_model:generateContent';
 
@@ -69,6 +80,8 @@ Rules:
     'required': ['platform', 'base_pay', 'incentive', 'tip'],
   };
 
+  static const _maxAttempts = 3;
+
   Future<ParsedOrder> parseScreenshot({
     required List<int> imageBytes,
     required String screenshotHash,
@@ -78,6 +91,32 @@ Rules:
       throw GeminiNotConfiguredException();
     }
 
+    for (var attempt = 1; attempt <= _maxAttempts; attempt++) {
+      try {
+        return await _parseOnce(
+          apiKey: apiKey,
+          imageBytes: imageBytes,
+          screenshotHash: screenshotHash,
+        );
+      } on _RetryableGeminiException catch (e) {
+        if (attempt == _maxAttempts) {
+          throw GeminiRequestException(e.message);
+        }
+        // Transient (timeout / network blip / rate limit / server
+        // overloaded) — exponential backoff (2s, 4s) gives rate limits a
+        // real chance to clear instead of immediately re-hitting them.
+        await Future<void>.delayed(Duration(seconds: 1 << attempt));
+      }
+    }
+    // Unreachable: the loop above always returns or throws.
+    throw GeminiRequestException('Exhausted retries.');
+  }
+
+  Future<ParsedOrder> _parseOnce({
+    required String apiKey,
+    required List<int> imageBytes,
+    required String screenshotHash,
+  }) async {
     final base64Image = base64Encode(imageBytes);
     final body = jsonEncode({
       'contents': [
@@ -93,10 +132,10 @@ Rules:
       'generationConfig': {
         'responseMimeType': 'application/json',
         'responseSchema': _responseSchema,
-        // Straightforward extraction task — extended thinking adds cost
-        // and latency without improving accuracy here (verified: identical
-        // output with ~7x fewer tokens with thinking disabled).
-        'thinkingConfig': {'thinkingBudget': 0},
+        // No thinkingConfig here: gemini-3.5-flash-lite returns 400
+        // INVALID_ARGUMENT when thinkingConfig is combined with
+        // responseSchema (verified directly), and this model doesn't
+        // produce hidden "thinking" tokens by default anyway.
       },
     });
 
@@ -110,7 +149,13 @@ Rules:
           )
           .timeout(const Duration(seconds: 30));
     } catch (e) {
-      throw GeminiRequestException('Could not reach Gemini: $e');
+      throw _RetryableGeminiException('Could not reach Gemini: $e');
+    }
+
+    if (response.statusCode == 429 || response.statusCode >= 500) {
+      throw _RetryableGeminiException(
+        'Gemini returned ${response.statusCode}: ${response.body}',
+      );
     }
 
     if (response.statusCode != 200) {
