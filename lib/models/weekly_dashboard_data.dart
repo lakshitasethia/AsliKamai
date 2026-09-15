@@ -28,8 +28,7 @@ class ZoneRate {
 }
 
 /// All figures the Weekly Dashboard (mockup screen 3) needs, computed from
-/// this week's Orders. Costs stay at 0 until Phase 4 adds Expense tracking —
-/// that's an expected intermediate state, not a bug.
+/// this week's Orders and Expenses.
 class WeeklyDashboardData {
   WeeklyDashboardData({
     required this.weekStart,
@@ -73,11 +72,13 @@ class WeeklyDashboardData {
     required DateTime weekStart,
     required DateTime weekEnd,
     required List<Order> orders,
+    List<Expense> expenses = const [],
   }) {
     final gross = orders.fold<double>(
       0,
       (sum, o) => sum + o.basePay + o.incentive + o.tip,
     );
+    final costs = expenses.fold<double>(0, (sum, e) => sum + e.amount);
     final totalIncentive = orders.fold<double>(0, (sum, o) => sum + o.incentive);
     final totalMinutes = orders.fold<int>(
       0,
@@ -101,7 +102,7 @@ class WeeklyDashboardData {
       weekEnd: weekEnd,
       orderCount: orders.length,
       gross: gross,
-      costs: 0, // Expense tracking lands in Phase 4.
+      costs: costs,
       totalIncentive: totalIncentive,
       totalHours: totalMinutes / 60,
       totalKm: totalKm,

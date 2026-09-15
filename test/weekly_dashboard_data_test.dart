@@ -28,6 +28,21 @@ Order _order({
   );
 }
 
+Expense _expense({
+  required String category,
+  required double amount,
+  required DateTime timestamp,
+}) {
+  return Expense(
+    id: 0,
+    category: category,
+    amount: amount,
+    rawText: null,
+    timestamp: timestamp,
+    createdAt: timestamp,
+  );
+}
+
 void main() {
   final weekStart = DateTime(2026, 9, 14);
   final weekEnd = weekStart.add(const Duration(days: 7));
@@ -77,7 +92,7 @@ void main() {
     );
 
     expect(data.gross, 120); // 50 + 70
-    expect(data.costs, 0); // Expense tracking lands in Phase 4
+    expect(data.costs, 0); // no expenses passed
     expect(data.net, 120);
     expect(data.totalIncentive, 10);
     expect(data.totalHours, closeTo(37 / 60, 0.001));
@@ -86,6 +101,35 @@ void main() {
     expect(data.netPerKm, closeTo(120 / 6.9, 0.01));
     expect(data.netWithoutIncentive, 110);
     expect(data.incentiveUpliftPercent, closeTo(10 / 110 * 100, 0.01));
+  });
+
+  test('expenses subtract from gross to produce net', () {
+    final orders = [
+      _order(
+        platform: 'swiggy',
+        timestamp: DateTime(2026, 9, 14, 8),
+        basePay: 100,
+        durationMin: 60,
+        distanceKm: 10,
+      ),
+    ];
+    final expenses = [
+      _expense(category: 'fuel', amount: 30, timestamp: DateTime(2026, 9, 14, 9)),
+      _expense(category: 'food', amount: 20, timestamp: DateTime(2026, 9, 15, 12)),
+    ];
+
+    final data = WeeklyDashboardData.fromOrders(
+      weekStart: weekStart,
+      weekEnd: weekEnd,
+      orders: orders,
+      expenses: expenses,
+    );
+
+    expect(data.gross, 100);
+    expect(data.costs, 50);
+    expect(data.net, 50);
+    expect(data.netPerHour, closeTo(50, 0.01));
+    expect(data.netPerKm, closeTo(5, 0.01));
   });
 
   test('best/worst hour picks the highest and lowest ₹/hr buckets', () {

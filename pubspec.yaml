@@ -56,6 +56,9 @@ dependencies:
   flutter_dotenv: ^5.2.1
   crypto: ^3.0.6
 
+  # Android native speech-to-text for voice cost entry (Phase 4).
+  speech_to_text: ^7.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

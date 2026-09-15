@@ -27,12 +27,14 @@ class _HomeScreenState extends State<HomeScreen> {
   late Future<WeeklyDashboardData> _dataFuture = _load();
 
   Future<WeeklyDashboardData> _load() async {
-    final orders =
-        await AppDatabase.instance.ordersInRange(_week.start, _week.end);
+    final db = AppDatabase.instance;
+    final orders = await db.ordersInRange(_week.start, _week.end);
+    final expenses = await db.expensesInRange(_week.start, _week.end);
     return WeeklyDashboardData.fromOrders(
       weekStart: _week.start,
       weekEnd: _week.end,
       orders: orders,
+      expenses: expenses,
     );
   }
 

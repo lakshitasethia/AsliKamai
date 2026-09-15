@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -26,15 +27,53 @@ class Orders extends Table {
       dateTime().withDefault(currentDateAndTime)();
 }
 
-@DriftDatabase(tables: [Orders])
+/// A logged cost (research.md's core `Expense` data model, §3.8), typically
+/// added by voice ("petrol 300") on the Costs tab. Feeds the Dashboard's
+/// gross-minus-costs net figure.
+class Expenses extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get category => text()(); // fuel | food | mobile | repair | toll | parking | other
+  RealColumn get amount => real()();
+  TextColumn get rawText => text().nullable()(); // what was heard/typed, for correction context
+  DateTimeColumn get timestamp => dateTime()();
+  DateTimeColumn get createdAt =>
+      dateTime().withDefault(currentDateAndTime)();
+}
+
+@DriftDatabase(tables: [Orders, Expenses])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
+
+  /// Test-only: an in-memory database, bypassing path_provider (which has
+  /// no platform implementation under `flutter test`'s host harness —
+  /// awaiting it there hangs rather than throwing).
+  @visibleForTesting
+  AppDatabase.forTesting() : super(NativeDatabase.memory());
 
   static AppDatabase? _instance;
   static AppDatabase get instance => _instance ??= AppDatabase();
 
+  /// Test-only: points [instance] at an in-memory database instead of the
+  /// real on-disk one, so widget tests that touch [instance] don't hang on
+  /// path_provider and don't leak state across tests.
+  @visibleForTesting
+  static Future<void> resetForTest() async {
+    await _instance?.close();
+    _instance = AppDatabase.forTesting();
+  }
+
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.createTable(expenses);
+          }
+        },
+      );
 
   Future<List<Order>> ordersInRange(DateTime start, DateTime end) {
     return (select(orders)
@@ -44,6 +83,29 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<int> insertOrder(OrdersCompanion entry) => into(orders).insert(entry);
+
+  Future<List<Expense>> expensesInRange(DateTime start, DateTime end) {
+    return (select(expenses)
+          ..where((e) => e.timestamp.isBetweenValues(start, end))
+          ..orderBy([(e) => OrderingTerm.desc(e.timestamp)]))
+        .get();
+  }
+
+  Stream<List<Expense>> watchRecentExpenses({int limit = 3}) {
+    return (select(expenses)
+          ..orderBy([(e) => OrderingTerm.desc(e.timestamp)])
+          ..limit(limit))
+        .watch();
+  }
+
+  Future<int> insertExpense(ExpensesCompanion entry) =>
+      into(expenses).insert(entry);
+
+  Future<void> updateExpense(int id, ExpensesCompanion entry) =>
+      (update(expenses)..where((e) => e.id.equals(id))).write(entry);
+
+  Future<void> deleteExpense(int id) =>
+      (delete(expenses)..where((e) => e.id.equals(id))).go();
 }
 
 LazyDatabase _openConnection() {
