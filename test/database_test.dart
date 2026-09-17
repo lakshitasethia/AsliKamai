@@ -106,4 +106,49 @@ void main() {
     final all = await db.watchAllEvidence().first;
     expect(all, isEmpty);
   });
+
+  LettersCompanion letterEntry({String templateId = 'deductionExplanation'}) {
+    return LettersCompanion.insert(
+      templateId: templateId,
+      lang: 'english',
+      filePath: '/tmp/letter.pdf',
+      generatedAt: DateTime(2026, 9, 16),
+    );
+  }
+
+  test('insertLetter saves a new letter', () async {
+    await db.insertLetter(letterEntry());
+
+    final all = await db.watchAllLetters().first;
+    expect(all, hasLength(1));
+    expect(all.single.templateId, 'deductionExplanation');
+  });
+
+  test('watchAllLetters orders by generatedAt, most recent first', () async {
+    await db.insertLetter(LettersCompanion.insert(
+      templateId: 'deductionExplanation',
+      lang: 'english',
+      filePath: '/tmp/old.pdf',
+      generatedAt: DateTime(2026, 9, 1),
+    ));
+    await db.insertLetter(LettersCompanion.insert(
+      templateId: 'idBlockReasons',
+      lang: 'hindi',
+      filePath: '/tmp/new.pdf',
+      generatedAt: DateTime(2026, 9, 16),
+    ));
+
+    final all = await db.watchAllLetters().first;
+    expect(all.map((l) => l.templateId), ['idBlockReasons', 'deductionExplanation']);
+  });
+
+  test('deleteLetter removes the letter', () async {
+    await db.insertLetter(letterEntry());
+    final saved = await db.watchAllLetters().first;
+
+    await db.deleteLetter(saved.single.id);
+
+    final all = await db.watchAllLetters().first;
+    expect(all, isEmpty);
+  });
 }

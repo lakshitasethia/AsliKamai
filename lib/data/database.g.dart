@@ -1609,12 +1609,369 @@ class EvidenceItemsCompanion extends UpdateCompanion<EvidenceItem> {
   }
 }
 
+class $LettersTable extends Letters with TableInfo<$LettersTable, Letter> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LettersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _templateIdMeta = const VerificationMeta(
+    'templateId',
+  );
+  @override
+  late final GeneratedColumn<String> templateId = GeneratedColumn<String>(
+    'template_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _langMeta = const VerificationMeta('lang');
+  @override
+  late final GeneratedColumn<String> lang = GeneratedColumn<String>(
+    'lang',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _filePathMeta = const VerificationMeta(
+    'filePath',
+  );
+  @override
+  late final GeneratedColumn<String> filePath = GeneratedColumn<String>(
+    'file_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _generatedAtMeta = const VerificationMeta(
+    'generatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> generatedAt = GeneratedColumn<DateTime>(
+    'generated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    templateId,
+    lang,
+    filePath,
+    generatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'letters';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Letter> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('template_id')) {
+      context.handle(
+        _templateIdMeta,
+        templateId.isAcceptableOrUnknown(data['template_id']!, _templateIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_templateIdMeta);
+    }
+    if (data.containsKey('lang')) {
+      context.handle(
+        _langMeta,
+        lang.isAcceptableOrUnknown(data['lang']!, _langMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_langMeta);
+    }
+    if (data.containsKey('file_path')) {
+      context.handle(
+        _filePathMeta,
+        filePath.isAcceptableOrUnknown(data['file_path']!, _filePathMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_filePathMeta);
+    }
+    if (data.containsKey('generated_at')) {
+      context.handle(
+        _generatedAtMeta,
+        generatedAt.isAcceptableOrUnknown(
+          data['generated_at']!,
+          _generatedAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_generatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Letter map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Letter(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      templateId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}template_id'],
+      )!,
+      lang: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}lang'],
+      )!,
+      filePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file_path'],
+      )!,
+      generatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}generated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $LettersTable createAlias(String alias) {
+    return $LettersTable(attachedDatabase, alias);
+  }
+}
+
+class Letter extends DataClass implements Insertable<Letter> {
+  final int id;
+  final String templateId;
+  final String lang;
+  final String filePath;
+  final DateTime generatedAt;
+  const Letter({
+    required this.id,
+    required this.templateId,
+    required this.lang,
+    required this.filePath,
+    required this.generatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['template_id'] = Variable<String>(templateId);
+    map['lang'] = Variable<String>(lang);
+    map['file_path'] = Variable<String>(filePath);
+    map['generated_at'] = Variable<DateTime>(generatedAt);
+    return map;
+  }
+
+  LettersCompanion toCompanion(bool nullToAbsent) {
+    return LettersCompanion(
+      id: Value(id),
+      templateId: Value(templateId),
+      lang: Value(lang),
+      filePath: Value(filePath),
+      generatedAt: Value(generatedAt),
+    );
+  }
+
+  factory Letter.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Letter(
+      id: serializer.fromJson<int>(json['id']),
+      templateId: serializer.fromJson<String>(json['templateId']),
+      lang: serializer.fromJson<String>(json['lang']),
+      filePath: serializer.fromJson<String>(json['filePath']),
+      generatedAt: serializer.fromJson<DateTime>(json['generatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'templateId': serializer.toJson<String>(templateId),
+      'lang': serializer.toJson<String>(lang),
+      'filePath': serializer.toJson<String>(filePath),
+      'generatedAt': serializer.toJson<DateTime>(generatedAt),
+    };
+  }
+
+  Letter copyWith({
+    int? id,
+    String? templateId,
+    String? lang,
+    String? filePath,
+    DateTime? generatedAt,
+  }) => Letter(
+    id: id ?? this.id,
+    templateId: templateId ?? this.templateId,
+    lang: lang ?? this.lang,
+    filePath: filePath ?? this.filePath,
+    generatedAt: generatedAt ?? this.generatedAt,
+  );
+  Letter copyWithCompanion(LettersCompanion data) {
+    return Letter(
+      id: data.id.present ? data.id.value : this.id,
+      templateId: data.templateId.present
+          ? data.templateId.value
+          : this.templateId,
+      lang: data.lang.present ? data.lang.value : this.lang,
+      filePath: data.filePath.present ? data.filePath.value : this.filePath,
+      generatedAt: data.generatedAt.present
+          ? data.generatedAt.value
+          : this.generatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Letter(')
+          ..write('id: $id, ')
+          ..write('templateId: $templateId, ')
+          ..write('lang: $lang, ')
+          ..write('filePath: $filePath, ')
+          ..write('generatedAt: $generatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, templateId, lang, filePath, generatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Letter &&
+          other.id == this.id &&
+          other.templateId == this.templateId &&
+          other.lang == this.lang &&
+          other.filePath == this.filePath &&
+          other.generatedAt == this.generatedAt);
+}
+
+class LettersCompanion extends UpdateCompanion<Letter> {
+  final Value<int> id;
+  final Value<String> templateId;
+  final Value<String> lang;
+  final Value<String> filePath;
+  final Value<DateTime> generatedAt;
+  const LettersCompanion({
+    this.id = const Value.absent(),
+    this.templateId = const Value.absent(),
+    this.lang = const Value.absent(),
+    this.filePath = const Value.absent(),
+    this.generatedAt = const Value.absent(),
+  });
+  LettersCompanion.insert({
+    this.id = const Value.absent(),
+    required String templateId,
+    required String lang,
+    required String filePath,
+    required DateTime generatedAt,
+  }) : templateId = Value(templateId),
+       lang = Value(lang),
+       filePath = Value(filePath),
+       generatedAt = Value(generatedAt);
+  static Insertable<Letter> custom({
+    Expression<int>? id,
+    Expression<String>? templateId,
+    Expression<String>? lang,
+    Expression<String>? filePath,
+    Expression<DateTime>? generatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (templateId != null) 'template_id': templateId,
+      if (lang != null) 'lang': lang,
+      if (filePath != null) 'file_path': filePath,
+      if (generatedAt != null) 'generated_at': generatedAt,
+    });
+  }
+
+  LettersCompanion copyWith({
+    Value<int>? id,
+    Value<String>? templateId,
+    Value<String>? lang,
+    Value<String>? filePath,
+    Value<DateTime>? generatedAt,
+  }) {
+    return LettersCompanion(
+      id: id ?? this.id,
+      templateId: templateId ?? this.templateId,
+      lang: lang ?? this.lang,
+      filePath: filePath ?? this.filePath,
+      generatedAt: generatedAt ?? this.generatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (templateId.present) {
+      map['template_id'] = Variable<String>(templateId.value);
+    }
+    if (lang.present) {
+      map['lang'] = Variable<String>(lang.value);
+    }
+    if (filePath.present) {
+      map['file_path'] = Variable<String>(filePath.value);
+    }
+    if (generatedAt.present) {
+      map['generated_at'] = Variable<DateTime>(generatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LettersCompanion(')
+          ..write('id: $id, ')
+          ..write('templateId: $templateId, ')
+          ..write('lang: $lang, ')
+          ..write('filePath: $filePath, ')
+          ..write('generatedAt: $generatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $OrdersTable orders = $OrdersTable(this);
   late final $ExpensesTable expenses = $ExpensesTable(this);
   late final $EvidenceItemsTable evidenceItems = $EvidenceItemsTable(this);
+  late final $LettersTable letters = $LettersTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1623,6 +1980,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     orders,
     expenses,
     evidenceItems,
+    letters,
   ];
 }
 
@@ -2438,6 +2796,205 @@ typedef $$EvidenceItemsTableProcessedTableManager =
       EvidenceItem,
       PrefetchHooks Function()
     >;
+typedef $$LettersTableCreateCompanionBuilder = LettersCompanion Function({
+  Value<int> id,
+  required String templateId,
+  required String lang,
+  required String filePath,
+  required DateTime generatedAt,
+});
+typedef $$LettersTableUpdateCompanionBuilder = LettersCompanion Function({
+  Value<int> id,
+  Value<String> templateId,
+  Value<String> lang,
+  Value<String> filePath,
+  Value<DateTime> generatedAt,
+});
+
+class $$LettersTableFilterComposer
+    extends Composer<_$AppDatabase, $LettersTable> {
+  $$LettersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get templateId => $composableBuilder(
+    column: $table.templateId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lang => $composableBuilder(
+    column: $table.lang,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get filePath => $composableBuilder(
+    column: $table.filePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get generatedAt => $composableBuilder(
+    column: $table.generatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$LettersTableOrderingComposer
+    extends Composer<_$AppDatabase, $LettersTable> {
+  $$LettersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get templateId => $composableBuilder(
+    column: $table.templateId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lang => $composableBuilder(
+    column: $table.lang,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get filePath => $composableBuilder(
+    column: $table.filePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get generatedAt => $composableBuilder(
+    column: $table.generatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LettersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LettersTable> {
+  $$LettersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get templateId => $composableBuilder(
+    column: $table.templateId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lang =>
+      $composableBuilder(column: $table.lang, builder: (column) => column);
+
+  GeneratedColumn<String> get filePath =>
+      $composableBuilder(column: $table.filePath, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get generatedAt => $composableBuilder(
+    column: $table.generatedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$LettersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LettersTable,
+          Letter,
+          $$LettersTableFilterComposer,
+          $$LettersTableOrderingComposer,
+          $$LettersTableAnnotationComposer,
+          $$LettersTableCreateCompanionBuilder,
+          $$LettersTableUpdateCompanionBuilder,
+          (Letter, BaseReferences<_$AppDatabase, $LettersTable, Letter>),
+          Letter,
+          PrefetchHooks Function()
+        > {
+  $$LettersTableTableManager(_$AppDatabase db, $LettersTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LettersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LettersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LettersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> templateId = const Value.absent(),
+                Value<String> lang = const Value.absent(),
+                Value<String> filePath = const Value.absent(),
+                Value<DateTime> generatedAt = const Value.absent(),
+              }) => LettersCompanion(
+                id: id,
+                templateId: templateId,
+                lang: lang,
+                filePath: filePath,
+                generatedAt: generatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String templateId,
+                required String lang,
+                required String filePath,
+                required DateTime generatedAt,
+              }) => LettersCompanion.insert(
+                id: id,
+                templateId: templateId,
+                lang: lang,
+                filePath: filePath,
+                generatedAt: generatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$LettersTable, Letter>(table),
+                  BaseReferences<_$AppDatabase, $LettersTable, Letter>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$LettersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LettersTable,
+      Letter,
+      $$LettersTableFilterComposer,
+      $$LettersTableOrderingComposer,
+      $$LettersTableAnnotationComposer,
+      $$LettersTableCreateCompanionBuilder,
+      $$LettersTableUpdateCompanionBuilder,
+      (Letter, BaseReferences<_$AppDatabase, $LettersTable, Letter>),
+      Letter,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2448,4 +3005,6 @@ class $AppDatabaseManager {
       $$ExpensesTableTableManager(_db, _db.expenses);
   $$EvidenceItemsTableTableManager get evidenceItems =>
       $$EvidenceItemsTableTableManager(_db, _db.evidenceItems);
+  $$LettersTableTableManager get letters =>
+      $$LettersTableTableManager(_db, _db.letters);
 }

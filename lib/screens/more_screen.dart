@@ -5,6 +5,7 @@ import '../theme/app_spacing.dart';
 import '../widgets/app_card.dart';
 import '../widgets/screen_title.dart';
 import '../widgets/section_header.dart';
+import 'letter_generator_screen.dart';
 
 /// More tab: profile, language, and the features reached from here in later
 /// phases (Letter Generator, Share Card, data export/delete). Not from the
@@ -28,8 +29,9 @@ class MoreScreen extends StatelessWidget {
                 _MoreTile(
                   icon: Icons.description_outlined,
                   title: 'Letter Generator',
-                  subtitle: 'Coming in Phase 7',
-                  onTap: () => _comingSoon(context, 'Letter Generator'),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const LetterGeneratorScreen()),
+                  ),
                 ),
                 const Divider(height: 1, color: AppColors.cardBorder),
                 _MoreTile(

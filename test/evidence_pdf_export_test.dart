@@ -14,6 +14,10 @@ void main() {
     expect(sanitizeForPdf('₹40 → ₹16'), 'Rs.40 -> Rs.16');
   });
 
+  test('replaces the em dash with an ASCII-safe form', () {
+    expect(sanitizeForPdf('Draft — pending review'), 'Draft - pending review');
+  });
+
   test('leaves plain ASCII text untouched', () {
     expect(sanitizeForPdf('Rate-cut evidence: zomato'), 'Rate-cut evidence: zomato');
   });

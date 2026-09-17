@@ -47,6 +47,18 @@ class EvidenceItems extends Table {
       dateTime().withDefault(currentDateAndTime)();
 }
 
+/// A generated letter (research.md's core `Letter` data model, §3.8). The
+/// rendered PDF is persisted (like Evidence's photos) so a past letter can
+/// be reopened exactly as it was generated, even if the Order/Evidence it
+/// referenced is later edited or deleted.
+class Letters extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get templateId => text()(); // deductionExplanation | idBlockReasons | grievanceFiling
+  TextColumn get lang => text()(); // english | hindi | kannada
+  TextColumn get filePath => text()();
+  DateTimeColumn get generatedAt => dateTime()();
+}
+
 /// A logged cost (research.md's core `Expense` data model, §3.8), typically
 /// added by voice ("petrol 300") on the Costs tab. Feeds the Dashboard's
 /// gross-minus-costs net figure.
@@ -60,7 +72,7 @@ class Expenses extends Table {
       dateTime().withDefault(currentDateAndTime)();
 }
 
-@DriftDatabase(tables: [Orders, Expenses, EvidenceItems])
+@DriftDatabase(tables: [Orders, Expenses, EvidenceItems, Letters])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
@@ -83,7 +95,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -95,6 +107,9 @@ class AppDatabase extends _$AppDatabase {
           if (from < 3) {
             await m.addColumn(orders, orders.screenshotPath);
             await m.createTable(evidenceItems);
+          }
+          if (from < 4) {
+            await m.createTable(letters);
           }
         },
       );
@@ -125,6 +140,16 @@ class AppDatabase extends _$AppDatabase {
     }
     await into(orders).insert(entry);
     return true;
+  }
+
+  /// Most recent orders regardless of week, for the Letter Generator's
+  /// "reference an order" picker (Phase 7) — unlike [ordersInRange], not
+  /// scoped to any particular week.
+  Future<List<Order>> recentOrders({int limit = 30}) {
+    return (select(orders)
+          ..orderBy([(o) => OrderingTerm.desc(o.timestamp)])
+          ..limit(limit))
+        .get();
   }
 
   Stream<List<Order>> watchOrdersInRange(DateTime start, DateTime end) {
@@ -178,6 +203,17 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deleteEvidence(int id) =>
       (delete(evidenceItems)..where((e) => e.id.equals(id))).go();
+
+  Future<int> insertLetter(LettersCompanion entry) => into(letters).insert(entry);
+
+  Stream<List<Letter>> watchAllLetters() {
+    return (select(letters)
+          ..orderBy([(l) => OrderingTerm.desc(l.generatedAt)]))
+        .watch();
+  }
+
+  Future<void> deleteLetter(int id) =>
+      (delete(letters)..where((l) => l.id.equals(id))).go();
 }
 
 LazyDatabase _openConnection() {

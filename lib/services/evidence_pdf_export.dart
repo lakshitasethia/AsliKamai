@@ -54,5 +54,9 @@ String _formatDate(DateTime dt) =>
 /// garbled boxes instead of throwing — verified directly by exporting and
 /// inspecting the PDF. Swap them for ASCII-safe equivalents before drawing.
 String sanitizeForPdf(String text) {
-  return text.replaceAll('₹', 'Rs.').replaceAll('↓', '-').replaceAll('→', '->');
+  return text
+      .replaceAll('₹', 'Rs.')
+      .replaceAll('↓', '-')
+      .replaceAll('→', '->')
+      .replaceAll('—', '-');
 }
