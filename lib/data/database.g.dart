@@ -141,6 +141,17 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, Order> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _screenshotPathMeta = const VerificationMeta(
+    'screenshotPath',
+  );
+  @override
+  late final GeneratedColumn<String> screenshotPath = GeneratedColumn<String>(
+    'screenshot_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -155,6 +166,7 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, Order> {
     zone,
     sourceScreenshotHash,
     createdAt,
+    screenshotPath,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -249,6 +261,15 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, Order> {
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('screenshot_path')) {
+      context.handle(
+        _screenshotPathMeta,
+        screenshotPath.isAcceptableOrUnknown(
+          data['screenshot_path']!,
+          _screenshotPathMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -306,6 +327,10 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, Order> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      screenshotPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}screenshot_path'],
+      ),
     );
   }
 
@@ -328,6 +353,12 @@ class Order extends DataClass implements Insertable<Order> {
   final String? zone;
   final String? sourceScreenshotHash;
   final DateTime createdAt;
+
+  /// Local file path of the source screenshot, persisted at import time
+  /// (Phase 6) so it can later be pulled into the Evidence Locker as
+  /// rate-cut proof. Null for orders imported before Phase 6, or entered
+  /// by hand.
+  final String? screenshotPath;
   const Order({
     required this.id,
     required this.platform,
@@ -341,6 +372,7 @@ class Order extends DataClass implements Insertable<Order> {
     this.zone,
     this.sourceScreenshotHash,
     required this.createdAt,
+    this.screenshotPath,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -367,6 +399,9 @@ class Order extends DataClass implements Insertable<Order> {
       map['source_screenshot_hash'] = Variable<String>(sourceScreenshotHash);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || screenshotPath != null) {
+      map['screenshot_path'] = Variable<String>(screenshotPath);
+    }
     return map;
   }
 
@@ -392,6 +427,9 @@ class Order extends DataClass implements Insertable<Order> {
           ? const Value.absent()
           : Value(sourceScreenshotHash),
       createdAt: Value(createdAt),
+      screenshotPath: screenshotPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(screenshotPath),
     );
   }
 
@@ -415,6 +453,7 @@ class Order extends DataClass implements Insertable<Order> {
         json['sourceScreenshotHash'],
       ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      screenshotPath: serializer.fromJson<String?>(json['screenshotPath']),
     );
   }
   @override
@@ -433,6 +472,7 @@ class Order extends DataClass implements Insertable<Order> {
       'zone': serializer.toJson<String?>(zone),
       'sourceScreenshotHash': serializer.toJson<String?>(sourceScreenshotHash),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'screenshotPath': serializer.toJson<String?>(screenshotPath),
     };
   }
 
@@ -449,6 +489,7 @@ class Order extends DataClass implements Insertable<Order> {
     Value<String?> zone = const Value.absent(),
     Value<String?> sourceScreenshotHash = const Value.absent(),
     DateTime? createdAt,
+    Value<String?> screenshotPath = const Value.absent(),
   }) => Order(
     id: id ?? this.id,
     platform: platform ?? this.platform,
@@ -464,6 +505,9 @@ class Order extends DataClass implements Insertable<Order> {
         ? sourceScreenshotHash.value
         : this.sourceScreenshotHash,
     createdAt: createdAt ?? this.createdAt,
+    screenshotPath: screenshotPath.present
+        ? screenshotPath.value
+        : this.screenshotPath,
   );
   Order copyWithCompanion(OrdersCompanion data) {
     return Order(
@@ -485,6 +529,9 @@ class Order extends DataClass implements Insertable<Order> {
           ? data.sourceScreenshotHash.value
           : this.sourceScreenshotHash,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      screenshotPath: data.screenshotPath.present
+          ? data.screenshotPath.value
+          : this.screenshotPath,
     );
   }
 
@@ -502,7 +549,8 @@ class Order extends DataClass implements Insertable<Order> {
           ..write('durationMin: $durationMin, ')
           ..write('zone: $zone, ')
           ..write('sourceScreenshotHash: $sourceScreenshotHash, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('screenshotPath: $screenshotPath')
           ..write(')'))
         .toString();
   }
@@ -521,6 +569,7 @@ class Order extends DataClass implements Insertable<Order> {
     zone,
     sourceScreenshotHash,
     createdAt,
+    screenshotPath,
   );
   @override
   bool operator ==(Object other) =>
@@ -537,7 +586,8 @@ class Order extends DataClass implements Insertable<Order> {
           other.durationMin == this.durationMin &&
           other.zone == this.zone &&
           other.sourceScreenshotHash == this.sourceScreenshotHash &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.screenshotPath == this.screenshotPath);
 }
 
 class OrdersCompanion extends UpdateCompanion<Order> {
@@ -553,6 +603,7 @@ class OrdersCompanion extends UpdateCompanion<Order> {
   final Value<String?> zone;
   final Value<String?> sourceScreenshotHash;
   final Value<DateTime> createdAt;
+  final Value<String?> screenshotPath;
   const OrdersCompanion({
     this.id = const Value.absent(),
     this.platform = const Value.absent(),
@@ -566,6 +617,7 @@ class OrdersCompanion extends UpdateCompanion<Order> {
     this.zone = const Value.absent(),
     this.sourceScreenshotHash = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.screenshotPath = const Value.absent(),
   });
   OrdersCompanion.insert({
     this.id = const Value.absent(),
@@ -580,6 +632,7 @@ class OrdersCompanion extends UpdateCompanion<Order> {
     this.zone = const Value.absent(),
     this.sourceScreenshotHash = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.screenshotPath = const Value.absent(),
   }) : platform = Value(platform),
        timestamp = Value(timestamp),
        basePay = Value(basePay);
@@ -596,6 +649,7 @@ class OrdersCompanion extends UpdateCompanion<Order> {
     Expression<String>? zone,
     Expression<String>? sourceScreenshotHash,
     Expression<DateTime>? createdAt,
+    Expression<String>? screenshotPath,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -611,6 +665,7 @@ class OrdersCompanion extends UpdateCompanion<Order> {
       if (sourceScreenshotHash != null)
         'source_screenshot_hash': sourceScreenshotHash,
       if (createdAt != null) 'created_at': createdAt,
+      if (screenshotPath != null) 'screenshot_path': screenshotPath,
     });
   }
 
@@ -627,6 +682,7 @@ class OrdersCompanion extends UpdateCompanion<Order> {
     Value<String?>? zone,
     Value<String?>? sourceScreenshotHash,
     Value<DateTime>? createdAt,
+    Value<String?>? screenshotPath,
   }) {
     return OrdersCompanion(
       id: id ?? this.id,
@@ -641,6 +697,7 @@ class OrdersCompanion extends UpdateCompanion<Order> {
       zone: zone ?? this.zone,
       sourceScreenshotHash: sourceScreenshotHash ?? this.sourceScreenshotHash,
       createdAt: createdAt ?? this.createdAt,
+      screenshotPath: screenshotPath ?? this.screenshotPath,
     );
   }
 
@@ -685,6 +742,9 @@ class OrdersCompanion extends UpdateCompanion<Order> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (screenshotPath.present) {
+      map['screenshot_path'] = Variable<String>(screenshotPath.value);
+    }
     return map;
   }
 
@@ -702,7 +762,8 @@ class OrdersCompanion extends UpdateCompanion<Order> {
           ..write('durationMin: $durationMin, ')
           ..write('zone: $zone, ')
           ..write('sourceScreenshotHash: $sourceScreenshotHash, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('screenshotPath: $screenshotPath')
           ..write(')'))
         .toString();
   }
@@ -1104,16 +1165,465 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
   }
 }
 
+class $EvidenceItemsTable extends EvidenceItems
+    with TableInfo<$EvidenceItemsTable, EvidenceItem> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EvidenceItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _filePathMeta = const VerificationMeta(
+    'filePath',
+  );
+  @override
+  late final GeneratedColumn<String> filePath = GeneratedColumn<String>(
+    'file_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fileHashMeta = const VerificationMeta(
+    'fileHash',
+  );
+  @override
+  late final GeneratedColumn<String> fileHash = GeneratedColumn<String>(
+    'file_hash',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _capturedAtMeta = const VerificationMeta(
+    'capturedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> capturedAt = GeneratedColumn<DateTime>(
+    'captured_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    type,
+    filePath,
+    fileHash,
+    capturedAt,
+    notes,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'evidence_items';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<EvidenceItem> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('file_path')) {
+      context.handle(
+        _filePathMeta,
+        filePath.isAcceptableOrUnknown(data['file_path']!, _filePathMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_filePathMeta);
+    }
+    if (data.containsKey('file_hash')) {
+      context.handle(
+        _fileHashMeta,
+        fileHash.isAcceptableOrUnknown(data['file_hash']!, _fileHashMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fileHashMeta);
+    }
+    if (data.containsKey('captured_at')) {
+      context.handle(
+        _capturedAtMeta,
+        capturedAt.isAcceptableOrUnknown(data['captured_at']!, _capturedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_capturedAtMeta);
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  EvidenceItem map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EvidenceItem(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      filePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file_path'],
+      )!,
+      fileHash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file_hash'],
+      )!,
+      capturedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}captured_at'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $EvidenceItemsTable createAlias(String alias) {
+    return $EvidenceItemsTable(attachedDatabase, alias);
+  }
+}
+
+class EvidenceItem extends DataClass implements Insertable<EvidenceItem> {
+  final int id;
+  final String type;
+  final String filePath;
+  final String fileHash;
+  final DateTime capturedAt;
+  final String? notes;
+  final DateTime createdAt;
+  const EvidenceItem({
+    required this.id,
+    required this.type,
+    required this.filePath,
+    required this.fileHash,
+    required this.capturedAt,
+    this.notes,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['type'] = Variable<String>(type);
+    map['file_path'] = Variable<String>(filePath);
+    map['file_hash'] = Variable<String>(fileHash);
+    map['captured_at'] = Variable<DateTime>(capturedAt);
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  EvidenceItemsCompanion toCompanion(bool nullToAbsent) {
+    return EvidenceItemsCompanion(
+      id: Value(id),
+      type: Value(type),
+      filePath: Value(filePath),
+      fileHash: Value(fileHash),
+      capturedAt: Value(capturedAt),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory EvidenceItem.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EvidenceItem(
+      id: serializer.fromJson<int>(json['id']),
+      type: serializer.fromJson<String>(json['type']),
+      filePath: serializer.fromJson<String>(json['filePath']),
+      fileHash: serializer.fromJson<String>(json['fileHash']),
+      capturedAt: serializer.fromJson<DateTime>(json['capturedAt']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'type': serializer.toJson<String>(type),
+      'filePath': serializer.toJson<String>(filePath),
+      'fileHash': serializer.toJson<String>(fileHash),
+      'capturedAt': serializer.toJson<DateTime>(capturedAt),
+      'notes': serializer.toJson<String?>(notes),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  EvidenceItem copyWith({
+    int? id,
+    String? type,
+    String? filePath,
+    String? fileHash,
+    DateTime? capturedAt,
+    Value<String?> notes = const Value.absent(),
+    DateTime? createdAt,
+  }) => EvidenceItem(
+    id: id ?? this.id,
+    type: type ?? this.type,
+    filePath: filePath ?? this.filePath,
+    fileHash: fileHash ?? this.fileHash,
+    capturedAt: capturedAt ?? this.capturedAt,
+    notes: notes.present ? notes.value : this.notes,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  EvidenceItem copyWithCompanion(EvidenceItemsCompanion data) {
+    return EvidenceItem(
+      id: data.id.present ? data.id.value : this.id,
+      type: data.type.present ? data.type.value : this.type,
+      filePath: data.filePath.present ? data.filePath.value : this.filePath,
+      fileHash: data.fileHash.present ? data.fileHash.value : this.fileHash,
+      capturedAt: data.capturedAt.present
+          ? data.capturedAt.value
+          : this.capturedAt,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EvidenceItem(')
+          ..write('id: $id, ')
+          ..write('type: $type, ')
+          ..write('filePath: $filePath, ')
+          ..write('fileHash: $fileHash, ')
+          ..write('capturedAt: $capturedAt, ')
+          ..write('notes: $notes, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, type, filePath, fileHash, capturedAt, notes, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EvidenceItem &&
+          other.id == this.id &&
+          other.type == this.type &&
+          other.filePath == this.filePath &&
+          other.fileHash == this.fileHash &&
+          other.capturedAt == this.capturedAt &&
+          other.notes == this.notes &&
+          other.createdAt == this.createdAt);
+}
+
+class EvidenceItemsCompanion extends UpdateCompanion<EvidenceItem> {
+  final Value<int> id;
+  final Value<String> type;
+  final Value<String> filePath;
+  final Value<String> fileHash;
+  final Value<DateTime> capturedAt;
+  final Value<String?> notes;
+  final Value<DateTime> createdAt;
+  const EvidenceItemsCompanion({
+    this.id = const Value.absent(),
+    this.type = const Value.absent(),
+    this.filePath = const Value.absent(),
+    this.fileHash = const Value.absent(),
+    this.capturedAt = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  EvidenceItemsCompanion.insert({
+    this.id = const Value.absent(),
+    required String type,
+    required String filePath,
+    required String fileHash,
+    required DateTime capturedAt,
+    this.notes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  }) : type = Value(type),
+       filePath = Value(filePath),
+       fileHash = Value(fileHash),
+       capturedAt = Value(capturedAt);
+  static Insertable<EvidenceItem> custom({
+    Expression<int>? id,
+    Expression<String>? type,
+    Expression<String>? filePath,
+    Expression<String>? fileHash,
+    Expression<DateTime>? capturedAt,
+    Expression<String>? notes,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (type != null) 'type': type,
+      if (filePath != null) 'file_path': filePath,
+      if (fileHash != null) 'file_hash': fileHash,
+      if (capturedAt != null) 'captured_at': capturedAt,
+      if (notes != null) 'notes': notes,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  EvidenceItemsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? type,
+    Value<String>? filePath,
+    Value<String>? fileHash,
+    Value<DateTime>? capturedAt,
+    Value<String?>? notes,
+    Value<DateTime>? createdAt,
+  }) {
+    return EvidenceItemsCompanion(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      filePath: filePath ?? this.filePath,
+      fileHash: fileHash ?? this.fileHash,
+      capturedAt: capturedAt ?? this.capturedAt,
+      notes: notes ?? this.notes,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (filePath.present) {
+      map['file_path'] = Variable<String>(filePath.value);
+    }
+    if (fileHash.present) {
+      map['file_hash'] = Variable<String>(fileHash.value);
+    }
+    if (capturedAt.present) {
+      map['captured_at'] = Variable<DateTime>(capturedAt.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EvidenceItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('type: $type, ')
+          ..write('filePath: $filePath, ')
+          ..write('fileHash: $fileHash, ')
+          ..write('capturedAt: $capturedAt, ')
+          ..write('notes: $notes, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $OrdersTable orders = $OrdersTable(this);
   late final $ExpensesTable expenses = $ExpensesTable(this);
+  late final $EvidenceItemsTable evidenceItems = $EvidenceItemsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [orders, expenses];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+    orders,
+    expenses,
+    evidenceItems,
+  ];
 }
 
 typedef $$OrdersTableCreateCompanionBuilder = OrdersCompanion Function({
@@ -1129,6 +1639,7 @@ typedef $$OrdersTableCreateCompanionBuilder = OrdersCompanion Function({
   Value<String?> zone,
   Value<String?> sourceScreenshotHash,
   Value<DateTime> createdAt,
+  Value<String?> screenshotPath,
 });
 typedef $$OrdersTableUpdateCompanionBuilder = OrdersCompanion Function({
   Value<int> id,
@@ -1143,6 +1654,7 @@ typedef $$OrdersTableUpdateCompanionBuilder = OrdersCompanion Function({
   Value<String?> zone,
   Value<String?> sourceScreenshotHash,
   Value<DateTime> createdAt,
+  Value<String?> screenshotPath,
 });
 
 class $$OrdersTableFilterComposer
@@ -1211,6 +1723,11 @@ class $$OrdersTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get screenshotPath => $composableBuilder(
+    column: $table.screenshotPath,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -1283,6 +1800,11 @@ class $$OrdersTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get screenshotPath => $composableBuilder(
+    column: $table.screenshotPath,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$OrdersTableAnnotationComposer
@@ -1335,6 +1857,11 @@ class $$OrdersTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get screenshotPath => $composableBuilder(
+    column: $table.screenshotPath,
+    builder: (column) => column,
+  );
 }
 
 class $$OrdersTableTableManager
@@ -1377,6 +1904,7 @@ class $$OrdersTableTableManager
                 Value<String?> zone = const Value.absent(),
                 Value<String?> sourceScreenshotHash = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String?> screenshotPath = const Value.absent(),
               }) => OrdersCompanion(
                 id: id,
                 platform: platform,
@@ -1390,6 +1918,7 @@ class $$OrdersTableTableManager
                 zone: zone,
                 sourceScreenshotHash: sourceScreenshotHash,
                 createdAt: createdAt,
+                screenshotPath: screenshotPath,
               ),
           createCompanionCallback:
               ({
@@ -1405,6 +1934,7 @@ class $$OrdersTableTableManager
                 Value<String?> zone = const Value.absent(),
                 Value<String?> sourceScreenshotHash = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String?> screenshotPath = const Value.absent(),
               }) => OrdersCompanion.insert(
                 id: id,
                 platform: platform,
@@ -1418,6 +1948,7 @@ class $$OrdersTableTableManager
                 zone: zone,
                 sourceScreenshotHash: sourceScreenshotHash,
                 createdAt: createdAt,
+                screenshotPath: screenshotPath,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -1664,6 +2195,249 @@ typedef $$ExpensesTableProcessedTableManager =
       Expense,
       PrefetchHooks Function()
     >;
+typedef $$EvidenceItemsTableCreateCompanionBuilder =
+    EvidenceItemsCompanion Function({
+      Value<int> id,
+      required String type,
+      required String filePath,
+      required String fileHash,
+      required DateTime capturedAt,
+      Value<String?> notes,
+      Value<DateTime> createdAt,
+    });
+typedef $$EvidenceItemsTableUpdateCompanionBuilder =
+    EvidenceItemsCompanion Function({
+      Value<int> id,
+      Value<String> type,
+      Value<String> filePath,
+      Value<String> fileHash,
+      Value<DateTime> capturedAt,
+      Value<String?> notes,
+      Value<DateTime> createdAt,
+    });
+
+class $$EvidenceItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $EvidenceItemsTable> {
+  $$EvidenceItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get filePath => $composableBuilder(
+    column: $table.filePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fileHash => $composableBuilder(
+    column: $table.fileHash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get capturedAt => $composableBuilder(
+    column: $table.capturedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$EvidenceItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $EvidenceItemsTable> {
+  $$EvidenceItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get filePath => $composableBuilder(
+    column: $table.filePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fileHash => $composableBuilder(
+    column: $table.fileHash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get capturedAt => $composableBuilder(
+    column: $table.capturedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$EvidenceItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $EvidenceItemsTable> {
+  $$EvidenceItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get filePath =>
+      $composableBuilder(column: $table.filePath, builder: (column) => column);
+
+  GeneratedColumn<String> get fileHash =>
+      $composableBuilder(column: $table.fileHash, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get capturedAt => $composableBuilder(
+    column: $table.capturedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$EvidenceItemsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $EvidenceItemsTable,
+          EvidenceItem,
+          $$EvidenceItemsTableFilterComposer,
+          $$EvidenceItemsTableOrderingComposer,
+          $$EvidenceItemsTableAnnotationComposer,
+          $$EvidenceItemsTableCreateCompanionBuilder,
+          $$EvidenceItemsTableUpdateCompanionBuilder,
+          (
+            EvidenceItem,
+            BaseReferences<_$AppDatabase, $EvidenceItemsTable, EvidenceItem>,
+          ),
+          EvidenceItem,
+          PrefetchHooks Function()
+        > {
+  $$EvidenceItemsTableTableManager(_$AppDatabase db, $EvidenceItemsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$EvidenceItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$EvidenceItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$EvidenceItemsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<String> filePath = const Value.absent(),
+                Value<String> fileHash = const Value.absent(),
+                Value<DateTime> capturedAt = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => EvidenceItemsCompanion(
+                id: id,
+                type: type,
+                filePath: filePath,
+                fileHash: fileHash,
+                capturedAt: capturedAt,
+                notes: notes,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String type,
+                required String filePath,
+                required String fileHash,
+                required DateTime capturedAt,
+                Value<String?> notes = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => EvidenceItemsCompanion.insert(
+                id: id,
+                type: type,
+                filePath: filePath,
+                fileHash: fileHash,
+                capturedAt: capturedAt,
+                notes: notes,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$EvidenceItemsTable, EvidenceItem>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $EvidenceItemsTable,
+                    EvidenceItem
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$EvidenceItemsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $EvidenceItemsTable,
+      EvidenceItem,
+      $$EvidenceItemsTableFilterComposer,
+      $$EvidenceItemsTableOrderingComposer,
+      $$EvidenceItemsTableAnnotationComposer,
+      $$EvidenceItemsTableCreateCompanionBuilder,
+      $$EvidenceItemsTableUpdateCompanionBuilder,
+      (
+        EvidenceItem,
+        BaseReferences<_$AppDatabase, $EvidenceItemsTable, EvidenceItem>,
+      ),
+      EvidenceItem,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -1672,4 +2446,6 @@ class $AppDatabaseManager {
       $$OrdersTableTableManager(_db, _db.orders);
   $$ExpensesTableTableManager get expenses =>
       $$ExpensesTableTableManager(_db, _db.expenses);
+  $$EvidenceItemsTableTableManager get evidenceItems =>
+      $$EvidenceItemsTableTableManager(_db, _db.evidenceItems);
 }

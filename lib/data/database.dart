@@ -25,6 +25,26 @@ class Orders extends Table {
   TextColumn get sourceScreenshotHash => text().nullable()();
   DateTimeColumn get createdAt =>
       dateTime().withDefault(currentDateAndTime)();
+
+  /// Local file path of the source screenshot, persisted at import time
+  /// (Phase 6) so it can later be pulled into the Evidence Locker as
+  /// rate-cut proof. Null for orders imported before Phase 6, or entered
+  /// by hand.
+  TextColumn get screenshotPath => text().nullable()();
+}
+
+/// A saved document (research.md's core `Evidence` data model, §3.8): a
+/// block/suspension notice, support ticket, or payout statement, kept with
+/// a SHA-256 hash as tamper-evident proof it hasn't changed since capture.
+class EvidenceItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get type => text()(); // notice | ticket | payout
+  TextColumn get filePath => text()();
+  TextColumn get fileHash => text()();
+  DateTimeColumn get capturedAt => dateTime()();
+  TextColumn get notes => text().nullable()();
+  DateTimeColumn get createdAt =>
+      dateTime().withDefault(currentDateAndTime)();
 }
 
 /// A logged cost (research.md's core `Expense` data model, §3.8), typically
@@ -40,7 +60,7 @@ class Expenses extends Table {
       dateTime().withDefault(currentDateAndTime)();
 }
 
-@DriftDatabase(tables: [Orders, Expenses])
+@DriftDatabase(tables: [Orders, Expenses, EvidenceItems])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
@@ -63,7 +83,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -71,6 +91,10 @@ class AppDatabase extends _$AppDatabase {
         onUpgrade: (m, from, to) async {
           if (from < 2) {
             await m.createTable(expenses);
+          }
+          if (from < 3) {
+            await m.addColumn(orders, orders.screenshotPath);
+            await m.createTable(evidenceItems);
           }
         },
       );
@@ -132,6 +156,28 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deleteExpense(int id) =>
       (delete(expenses)..where((e) => e.id.equals(id))).go();
+
+  /// Inserts [entry] unless its `fileHash` already exists on another
+  /// evidence item — same dedup reasoning as [insertOrderIfNew]: adding the
+  /// same photo twice (by hand, or via the rate-cut auto-save) shouldn't
+  /// create a second copy. Returns whether it actually inserted.
+  Future<bool> insertEvidenceIfNew(EvidenceItemsCompanion entry) async {
+    final existing = await (select(evidenceItems)
+          ..where((e) => e.fileHash.equals(entry.fileHash.value)))
+        .getSingleOrNull();
+    if (existing != null) return false;
+    await into(evidenceItems).insert(entry);
+    return true;
+  }
+
+  Stream<List<EvidenceItem>> watchAllEvidence() {
+    return (select(evidenceItems)
+          ..orderBy([(e) => OrderingTerm.desc(e.capturedAt)]))
+        .watch();
+  }
+
+  Future<void> deleteEvidence(int id) =>
+      (delete(evidenceItems)..where((e) => e.id.equals(id))).go();
 }
 
 LazyDatabase _openConnection() {

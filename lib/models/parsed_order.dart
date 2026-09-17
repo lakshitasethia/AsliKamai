@@ -16,6 +16,7 @@ class ParsedOrder {
     this.durationMin,
     this.zone,
     this.sourceScreenshotHash,
+    this.screenshotPath,
     this.parseFailed = false,
   });
 
@@ -29,6 +30,10 @@ class ParsedOrder {
   int? durationMin;
   String? zone;
   String? sourceScreenshotHash;
+
+  /// Local path of the persisted copy of the source screenshot (Phase 6),
+  /// so a later rate-cut alert can pull it into the Evidence Locker.
+  String? screenshotPath;
 
   /// True when Gemini could not read this screenshot at all — the rider
   /// sees an inline error on this card instead of editable fields.

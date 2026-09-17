@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../data/database.dart';
@@ -8,6 +10,7 @@ import '../models/weekly_dashboard_data.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
+import '../services/rate_cut_evidence.dart';
 import '../utils/currency.dart';
 import '../widgets/app_card.dart';
 import '../widgets/empty_state.dart';
@@ -179,6 +182,9 @@ class _RateCutAlertSectionState extends State<_RateCutAlertSection> {
 
         Widget? content;
         if (alert != null) {
+          // Fire-and-forget: idempotent (hash-deduped), so calling this on
+          // every rebuild while the alert is live is harmless.
+          unawaited(saveRateCutEvidence(AppDatabase.instance, alert));
           if (!_dismissed) {
             content = _RateCutAlertCard(
               alert: alert,

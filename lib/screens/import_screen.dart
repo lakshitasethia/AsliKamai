@@ -7,6 +7,7 @@ import '../models/parsed_order.dart';
 import '../models/platform.dart';
 import '../services/gemini_vision_service.dart';
 import '../services/image_hash.dart';
+import '../services/screenshot_store.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
@@ -62,10 +63,12 @@ class _ImportScreenState extends State<ImportScreen> {
       try {
         final bytes = await File(file.path).readAsBytes();
         final hash = hashImageBytes(bytes);
+        final screenshotPath = await saveScreenshot(bytes: bytes, hash: hash);
         final parsed = await _gemini.parseScreenshot(
           imageBytes: bytes,
           screenshotHash: hash,
         );
+        parsed.screenshotPath = screenshotPath;
         results.add(parsed);
       } on GeminiNotConfiguredException {
         if (!mounted) return;

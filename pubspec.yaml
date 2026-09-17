@@ -59,6 +59,12 @@ dependencies:
   # Android native speech-to-text for voice cost entry (Phase 4).
   speech_to_text: ^7.0.0
 
+  # Evidence Locker (Phase 6): PDF export of saved documents, and the
+  # native share sheet for a single document's "download" action.
+  pdf: ^3.11.1
+  printing: ^5.13.4
+  share_plus: ^10.1.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

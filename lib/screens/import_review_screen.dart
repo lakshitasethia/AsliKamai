@@ -64,6 +64,7 @@ class _ImportReviewScreenState extends State<ImportReviewScreen> {
           durationMin: Value(order.durationMin),
           zone: Value(order.zone),
           sourceScreenshotHash: Value(order.sourceScreenshotHash),
+          screenshotPath: Value(order.screenshotPath),
         ),
       );
       if (inserted) savedCount++;

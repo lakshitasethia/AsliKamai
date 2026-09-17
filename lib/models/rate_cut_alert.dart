@@ -9,6 +9,7 @@ class RateCutAlert {
     required this.platform,
     required this.thisWeekRatePerKm,
     required this.lastWeekRatePerKm,
+    required this.beforeOrder,
     required this.evidenceOrders,
   });
 
@@ -18,8 +19,12 @@ class RateCutAlert {
   final double thisWeekRatePerKm;
   final double lastWeekRatePerKm;
 
+  /// The most recent last-week order for [platform] — the "before" half of
+  /// research.md's "saves the before and after screenshots automatically".
+  final Order beforeOrder;
+
   /// The 5 most recent this-week orders for [platform], most recent first —
-  /// shown as proof of the lower rate.
+  /// the "after" evidence, shown as proof of the lower rate.
   final List<Order> evidenceOrders;
 
   double get dropPercent =>
@@ -54,10 +59,15 @@ class RateCutAlert {
           .toList()
         ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
+      final beforeOrder = ([...lastWeekGroup]
+            ..sort((a, b) => b.timestamp.compareTo(a.timestamp)))
+          .first;
+
       worst = RateCutAlert(
         platform: entry.key,
         thisWeekRatePerKm: thisWeekMedian,
         lastWeekRatePerKm: lastWeekMedian,
+        beforeOrder: beforeOrder,
         evidenceOrders: evidence.take(5).toList(),
       );
     }

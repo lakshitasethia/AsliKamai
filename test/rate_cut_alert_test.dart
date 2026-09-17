@@ -239,6 +239,38 @@ void main() {
     expect(alert!.thisWeekRatePerKm, closeTo(30, 0.01));
   });
 
+  test('beforeOrder is the most recent last-week order for the flagged platform', () {
+    final lastWeek = [
+      _order(
+        platform: 'swiggy',
+        timestamp: DateTime(2026, 9, 8),
+        basePay: 100,
+        distanceKm: 2,
+      ),
+      _order(
+        platform: 'swiggy',
+        timestamp: DateTime(2026, 9, 10), // most recent of last week
+        basePay: 100,
+        distanceKm: 2,
+      ),
+    ];
+    final thisWeek = [
+      _order(
+        platform: 'swiggy',
+        timestamp: DateTime(2026, 9, 14),
+        basePay: 60,
+        distanceKm: 2,
+      ),
+    ];
+
+    final alert = RateCutAlert.detect(
+      thisWeekOrders: thisWeek,
+      lastWeekOrders: lastWeek,
+    );
+
+    expect(alert!.beforeOrder.timestamp, DateTime(2026, 9, 10));
+  });
+
   test('median of an even number of orders averages the two middle values', () {
     final lastWeek = [
       _order(
