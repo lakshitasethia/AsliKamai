@@ -10,9 +10,20 @@ class SpeechService {
   /// True once initialized and ready to listen — false if the device has no
   /// recognizer, or the user denied the microphone permission when
   /// [initialize] triggered the system prompt.
-  Future<bool> init() async {
+  ///
+  /// [onStatus] and (Android/iOS) [onError] are only actually wired up to
+  /// the plugin on the first call — `speech_to_text` ignores them on later
+  /// calls once it's already initialized — but that's fine since callers
+  /// pass the same closures every time.
+  Future<bool> init({
+    void Function(String status)? onStatus,
+    void Function(String errorMsg)? onError,
+  }) async {
     try {
-      _available = await _speech.initialize();
+      _available = await _speech.initialize(
+        onStatus: onStatus,
+        onError: onError == null ? null : (e) => onError(e.errorMsg),
+      );
     } catch (_) {
       _available = false;
     }

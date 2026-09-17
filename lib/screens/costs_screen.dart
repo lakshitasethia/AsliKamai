@@ -9,6 +9,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import '../utils/currency.dart';
+import '../utils/relative_date.dart';
 import '../widgets/app_card.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/screen_title.dart';
@@ -41,11 +42,15 @@ class _CostsScreenState extends State<CostsScreen> {
   Future<void> _toggleListening() async {
     if (_micState == _MicState.listening) {
       await _speech.stopListening();
+      if (mounted) setState(() => _micState = _MicState.idle);
       return;
     }
 
     setState(() => _micState = _MicState.initializing);
-    final available = await _speech.init();
+    final available = await _speech.init(
+      onStatus: _handleSpeechStatus,
+      onError: _handleSpeechError,
+    );
     if (!mounted) return;
 
     if (!available) {
@@ -67,6 +72,26 @@ class _CostsScreenState extends State<CostsScreen> {
           if (text.trim().isNotEmpty) _handleRecognizedText(text);
         }
       },
+    );
+  }
+
+  /// Independent of [_handleRecognizedText]/[onResult]: the recognizer can
+  /// stop listening (timeout, silence, platform-initiated) without ever
+  /// delivering a final result, which would otherwise leave the UI stuck
+  /// showing "Listening..." forever.
+  void _handleSpeechStatus(String status) {
+    if (!mounted) return;
+    if ((status == 'notListening' || status == 'done') &&
+        _micState == _MicState.listening) {
+      setState(() => _micState = _MicState.idle);
+    }
+  }
+
+  void _handleSpeechError(String errorMsg) {
+    if (!mounted) return;
+    setState(() => _micState = _MicState.idle);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Couldn\'t hear that — try again.')),
     );
   }
 
@@ -297,7 +322,7 @@ class _ExpenseTile extends StatelessWidget {
         child: Icon(category.icon, color: AppColors.primaryGreen),
       ),
       title: Text(category.label, style: AppTextStyles.body),
-      subtitle: Text(_relativeDate(expense.timestamp), style: AppTextStyles.bodyMuted),
+      subtitle: Text(formatRelativeDate(expense.timestamp), style: AppTextStyles.bodyMuted),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -309,21 +334,6 @@ class _ExpenseTile extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _relativeDate(DateTime dt) {
-    final now = DateTime.now();
-    final diff = now.difference(dt);
-    if (diff.inDays == 0) return 'Today, ${_time(dt)}';
-    if (diff.inDays == 1) return 'Yesterday, ${_time(dt)}';
-    return '${dt.day}/${dt.month}, ${_time(dt)}';
-  }
-
-  String _time(DateTime dt) {
-    final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
-    final period = dt.hour < 12 ? 'AM' : 'PM';
-    final minute = dt.minute.toString().padLeft(2, '0');
-    return '$hour:$minute $period';
   }
 }
 
