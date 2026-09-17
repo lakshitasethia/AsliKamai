@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../data/database.dart';
+import '../models/platform.dart';
+import '../models/rate_cut_alert.dart';
 import '../models/week_range.dart';
 import '../models/weekly_dashboard_data.dart';
 import '../theme/app_colors.dart';
@@ -10,6 +12,7 @@ import '../utils/currency.dart';
 import '../widgets/app_card.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/section_header.dart';
+import 'rate_cut_details_screen.dart';
 
 /// Weekly Dashboard tab (mockup screen 3): the "3-second glance" home
 /// screen — net earnings, ₹/hr, ₹/km, best/worst hour and zone, and
@@ -66,6 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
           builder: (context, snapshot) {
             return Column(
               children: [
+                const _RateCutAlertSection(),
                 _WeekNavigator(
                   week: _week,
                   onPrevious: () => _goToWeek(_week.previous()),
@@ -133,6 +137,158 @@ class _WeekNavigator extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Always compares the real current week vs. last week, independent of
+/// whatever week [_WeekNavigator] is browsing — a rate cut is a "right now"
+/// signal, not tied to dashboard history navigation.
+class _RateCutAlertSection extends StatefulWidget {
+  const _RateCutAlertSection();
+
+  @override
+  State<_RateCutAlertSection> createState() => _RateCutAlertSectionState();
+}
+
+class _RateCutAlertSectionState extends State<_RateCutAlertSection> {
+  // In-memory only: dismissing hides the card for this app session; it
+  // reappears on next launch if the cut is still there. No persistence yet.
+  bool _dismissed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final thisWeek = WeekRange(DateTime.now());
+    final lastWeek = thisWeek.previous();
+
+    return StreamBuilder<List<Order>>(
+      stream: AppDatabase.instance.watchOrdersInRange(lastWeek.start, thisWeek.end),
+      builder: (context, snapshot) {
+        final orders = snapshot.data;
+        if (orders == null) return const SizedBox.shrink();
+
+        final thisWeekOrders =
+            orders.where((o) => !o.timestamp.isBefore(thisWeek.start)).toList();
+        final lastWeekOrders =
+            orders.where((o) => o.timestamp.isBefore(thisWeek.start)).toList();
+
+        final alert = RateCutAlert.detect(
+          thisWeekOrders: thisWeekOrders,
+          lastWeekOrders: lastWeekOrders,
+        );
+
+        Widget? content;
+        if (alert != null) {
+          if (!_dismissed) {
+            content = _RateCutAlertCard(
+              alert: alert,
+              onDismiss: () => setState(() => _dismissed = true),
+              onViewDetails: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => RateCutDetailsScreen(alert: alert),
+                ),
+              ),
+            );
+          }
+        } else if (thisWeekOrders.isNotEmpty && lastWeekOrders.isNotEmpty) {
+          // Only claim "all good" when there's enough data to actually
+          // compare — otherwise this would falsely reassure a new user.
+          content = const _AllGoodRow();
+        }
+
+        if (content == null) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screenPadding,
+            AppSpacing.sm,
+            AppSpacing.screenPadding,
+            0,
+          ),
+          child: content,
+        );
+      },
+    );
+  }
+}
+
+class _RateCutAlertCard extends StatelessWidget {
+  const _RateCutAlertCard({
+    required this.alert,
+    required this.onDismiss,
+    required this.onViewDetails,
+  });
+
+  final RateCutAlert alert;
+  final VoidCallback onDismiss;
+  final VoidCallback onViewDetails;
+
+  @override
+  Widget build(BuildContext context) {
+    final platform = GigPlatform.fromKey(alert.platform);
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.redAlert.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
+        border: Border.all(color: AppColors.redAlert.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.trending_down_rounded, color: AppColors.redAlert),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  '${platform.label} rate cut detected',
+                  style: AppTextStyles.sectionHeader
+                      .copyWith(color: AppColors.redAlert),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close, size: 18, color: AppColors.mutedGrey),
+                onPressed: onDismiss,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            '${formatRupees(alert.lastWeekRatePerKm)}/km → '
+            '${formatRupees(alert.thisWeekRatePerKm)}/km '
+            '(↓${alert.dropPercent.toStringAsFixed(0)}%)',
+            style: AppTextStyles.body,
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: onViewDetails,
+              child: const Text('View Full Details'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AllGoodRow extends StatelessWidget {
+  const _AllGoodRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Icon(Icons.check_circle_rounded,
+            color: AppColors.successGreen, size: 20),
+        const SizedBox(width: AppSpacing.xs),
+        Text(
+          'All good! No rate cut detected this week.',
+          style: AppTextStyles.bodyMuted,
+        ),
+      ],
     );
   }
 }

@@ -50,8 +50,9 @@ class _ImportReviewScreenState extends State<ImportReviewScreen> {
   Future<void> _confirmAndSave() async {
     setState(() => _saving = true);
     final db = AppDatabase.instance;
+    var savedCount = 0;
     for (final order in _orders.where((o) => !o.parseFailed)) {
-      await db.insertOrder(
+      final inserted = await db.insertOrderIfNew(
         OrdersCompanion.insert(
           platform: order.platform.name,
           orderRef: Value(order.orderRef),
@@ -65,9 +66,10 @@ class _ImportReviewScreenState extends State<ImportReviewScreen> {
           sourceScreenshotHash: Value(order.sourceScreenshotHash),
         ),
       );
+      if (inserted) savedCount++;
     }
     if (!mounted) return;
-    Navigator.of(context).pop(_validCount);
+    Navigator.of(context).pop(savedCount);
   }
 
   @override

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
@@ -40,10 +41,24 @@ class GeminiVisionService {
   static const _endpoint =
       'https://generativelanguage.googleapis.com/v1beta/models/$_model:generateContent';
 
-  static const _prompt = '''
+  /// Builds the vision prompt anchored to [today] — without this anchor,
+  /// Gemini has no way to resolve a screenshot's date when it's shown
+  /// without a year (e.g. "9 Sep", which every partner app does), and can
+  /// guess an arbitrary — and arbitrarily wrong — year. Verified directly:
+  /// with no anchor, Gemini resolved "9 Sep" to 2024 when the real year was
+  /// 2026, silently landing the order two years away from where it belonged.
+  @visibleForTesting
+  static String buildPrompt(DateTime today) {
+    final todayIso =
+        '${today.year.toString().padLeft(4, '0')}-'
+        '${today.month.toString().padLeft(2, '0')}-'
+        '${today.day.toString().padLeft(2, '0')}';
+    return '''
 You are reading a single screenshot from an Indian gig-delivery partner app
 (Swiggy, Zomato, Blinkit, or Zepto driver/partner app). Extract the ONE order
 shown on this screen into JSON matching the given schema.
+
+Today's date is $todayIso.
 
 Rules:
 - platform: one of swiggy, zomato, blinkit, zepto, other — infer from logo/branding/text.
@@ -52,13 +67,16 @@ Rules:
   the others.
 - distance_km and duration_min: null if not visible on screen.
 - timestamp: best-guess ISO 8601 date-time for when this order happened, using any date/time
-  visible on screen. If no date is visible, use today's date with the visible time, or null
-  if no time is visible either.
+  visible on screen. If the visible date has no year, assume it happened in $todayIso's year —
+  but never in the future relative to $todayIso, so use the year before instead if that would
+  otherwise put it after today. If no date is visible at all, use today's date with the
+  visible time, or null if no time is visible either.
 - order_ref: the order/trip ID shown on screen, or null if none is visible.
 - zone: the area/locality name shown on screen (e.g. "Koramangala"), or null.
 - If this does not look like a delivery-partner-app order screen at all, set
   "not_an_order_screen" to true and leave other fields as best-effort or null.
 ''';
+  }
 
   static final _responseSchema = {
     'type': 'OBJECT',
@@ -122,7 +140,7 @@ Rules:
       'contents': [
         {
           'parts': [
-            {'text': _prompt},
+            {'text': buildPrompt(DateTime.now())},
             {
               'inline_data': {'mime_type': 'image/jpeg', 'data': base64Image},
             },

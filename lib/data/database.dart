@@ -84,6 +84,32 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> insertOrder(OrdersCompanion entry) => into(orders).insert(entry);
 
+  /// Inserts [entry] unless its `sourceScreenshotHash` already exists on
+  /// another order — re-importing the same screenshot (e.g. picking it
+  /// twice from the gallery) would otherwise silently double-count that
+  /// order's pay. Entries with no hash (e.g. hand-edited orders) always
+  /// insert. Returns whether it actually inserted.
+  Future<bool> insertOrderIfNew(OrdersCompanion entry) async {
+    final hash = entry.sourceScreenshotHash.present
+        ? entry.sourceScreenshotHash.value
+        : null;
+    if (hash != null) {
+      final existing = await (select(orders)
+            ..where((o) => o.sourceScreenshotHash.equals(hash)))
+          .getSingleOrNull();
+      if (existing != null) return false;
+    }
+    await into(orders).insert(entry);
+    return true;
+  }
+
+  Stream<List<Order>> watchOrdersInRange(DateTime start, DateTime end) {
+    return (select(orders)
+          ..where((o) => o.timestamp.isBetweenValues(start, end))
+          ..orderBy([(o) => OrderingTerm.desc(o.timestamp)]))
+        .watch();
+  }
+
   Future<List<Expense>> expensesInRange(DateTime start, DateTime end) {
     return (select(expenses)
           ..where((e) => e.timestamp.isBetweenValues(start, end))
