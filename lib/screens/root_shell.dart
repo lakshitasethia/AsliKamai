@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/strings.dart';
 import 'costs_screen.dart';
 import 'evidence_screen.dart';
 import 'home_screen.dart';
@@ -28,6 +29,7 @@ class _RootShellState extends State<RootShell> {
 
   @override
   Widget build(BuildContext context) {
+    final s = S(context);
     return Scaffold(
       body: SafeArea(
         top: false,
@@ -36,29 +38,29 @@ class _RootShellState extends State<RootShell> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _index,
         onTap: (i) => setState(() => _index = i),
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
+            icon: const Icon(Icons.home_outlined),
+            activeIcon: const Icon(Icons.home),
+            label: s.navHome,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.file_upload_outlined),
-            activeIcon: Icon(Icons.file_upload),
-            label: 'Import',
+            icon: const Icon(Icons.file_upload_outlined),
+            activeIcon: const Icon(Icons.file_upload),
+            label: s.navImport,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.currency_rupee),
-            label: 'Costs',
+            icon: const Icon(Icons.currency_rupee),
+            label: s.navCosts,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.shield_outlined),
-            activeIcon: Icon(Icons.shield),
-            label: 'Evidence',
+            icon: const Icon(Icons.shield_outlined),
+            activeIcon: const Icon(Icons.shield),
+            label: s.navEvidence,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.more_horiz),
-            label: 'More',
+            icon: const Icon(Icons.more_horiz),
+            label: s.navMore,
           ),
         ],
       ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../data/database.dart';
+import '../l10n/strings.dart';
 import '../models/parsed_order.dart';
 import '../models/platform.dart';
 import '../theme/app_colors.dart';
@@ -75,10 +76,11 @@ class _ImportReviewScreenState extends State<ImportReviewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = S(context);
     return Scaffold(
       appBar: AppBar(
         leading: const BackButton(),
-        title: const ScreenTitle('Screenshot Review (OCR)'),
+        title: ScreenTitle(s.screenshotReviewTitle),
       ),
       body: SafeArea(
         top: false,
@@ -94,8 +96,7 @@ class _ImportReviewScreenState extends State<ImportReviewScreen> {
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Review and correct the details. We\'ll save these to '
-                'your weekly report.',
+                s.reviewAndCorrectPrompt,
                 style: AppTextStyles.bodyMuted,
               ),
             ),
@@ -103,7 +104,7 @@ class _ImportReviewScreenState extends State<ImportReviewScreen> {
           Expanded(
             child: _orders.isEmpty
                 ? Center(
-                    child: Text('Nothing left to save.',
+                    child: Text(s.nothingLeftToSave,
                         style: AppTextStyles.bodyMuted),
                   )
                 : ListView.separated(
@@ -131,10 +132,7 @@ class _ImportReviewScreenState extends State<ImportReviewScreen> {
                         color: AppColors.white,
                       ),
                     )
-                  : Text(
-                      'Confirm & Save ($_validCount '
-                      '${_validCount == 1 ? 'order' : 'orders'})',
-                    ),
+                  : Text(s.confirmAndSave(_validCount)),
             ),
           ),
         ],
@@ -166,8 +164,7 @@ class _OrderReviewCard extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(
-                'Couldn\'t read this screenshot. Tap to enter manually, '
-                'or remove it.',
+                S(context).couldntReadScreenshotEntry,
                 style: AppTextStyles.body,
               ),
             ),
@@ -199,7 +196,8 @@ class _OrderReviewCard extends StatelessWidget {
                     if (order.distanceKm != null)
                       '${order.distanceKm!.toStringAsFixed(1)} km',
                     if (order.durationMin != null) '${order.durationMin} min',
-                    if (order.orderRef != null) 'Order # ${order.orderRef}',
+                    if (order.orderRef != null)
+                      S(context).orderNumberInline(order.orderRef!),
                   ].join(' • '),
                   style: AppTextStyles.bodyMuted,
                 ),
@@ -243,6 +241,7 @@ class _OrderEditSheetState extends State<_OrderEditSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final s = S(context);
     return Padding(
       padding: EdgeInsets.only(
         left: AppSpacing.screenPadding,
@@ -259,11 +258,11 @@ class _OrderEditSheetState extends State<_OrderEditSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Edit order', style: AppTextStyles.screenTitle),
+            Text(s.editOrder, style: AppTextStyles.screenTitle),
             const SizedBox(height: AppSpacing.md),
             DropdownButtonFormField<GigPlatform>(
               initialValue: _platform,
-              decoration: const InputDecoration(labelText: 'Platform'),
+              decoration: InputDecoration(labelText: s.platformLabel),
               items: GigPlatform.values
                   .map((p) =>
                       DropdownMenuItem(value: p, child: Text(p.label)))
@@ -274,11 +273,11 @@ class _OrderEditSheetState extends State<_OrderEditSheet> {
             Row(
               children: [
                 Expanded(
-                  child: _NumberField(label: 'Base pay (₹)', controller: _basePay),
+                  child: _NumberField(label: s.basePayLabel, controller: _basePay),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
-                  child: _NumberField(label: 'Incentive (₹)', controller: _incentive),
+                  child: _NumberField(label: s.incentiveLabel, controller: _incentive),
                 ),
               ],
             ),
@@ -286,12 +285,12 @@ class _OrderEditSheetState extends State<_OrderEditSheet> {
             Row(
               children: [
                 Expanded(
-                  child: _NumberField(label: 'Tip (₹)', controller: _tip),
+                  child: _NumberField(label: s.tipLabel, controller: _tip),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: _NumberField(
-                    label: 'Distance (km)',
+                    label: s.distanceKmLabel,
                     controller: _distance,
                     allowDecimal: true,
                   ),
@@ -303,13 +302,13 @@ class _OrderEditSheetState extends State<_OrderEditSheet> {
               children: [
                 Expanded(
                   child: _NumberField(
-                      label: 'Duration (min)', controller: _duration),
+                      label: s.durationMinLabel, controller: _duration),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: TextField(
                     controller: _zone,
-                    decoration: const InputDecoration(labelText: 'Zone'),
+                    decoration: InputDecoration(labelText: s.zoneLabel),
                   ),
                 ),
               ],
@@ -317,7 +316,7 @@ class _OrderEditSheetState extends State<_OrderEditSheet> {
             const SizedBox(height: AppSpacing.sm),
             TextField(
               controller: _orderRef,
-              decoration: const InputDecoration(labelText: 'Order #'),
+              decoration: InputDecoration(labelText: s.orderNumberFieldLabel),
             ),
             const SizedBox(height: AppSpacing.lg),
             ElevatedButton(
@@ -334,7 +333,7 @@ class _OrderEditSheetState extends State<_OrderEditSheet> {
                   ..parseFailed = false;
                 Navigator.of(context).pop(widget.order);
               },
-              child: const Text('Save changes'),
+              child: Text(s.saveChanges),
             ),
           ],
         ),

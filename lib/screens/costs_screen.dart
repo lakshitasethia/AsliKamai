@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 
 import '../data/database.dart';
+import '../l10n/strings.dart';
 import '../models/expense_category.dart';
 import '../services/speech_service.dart';
 import '../services/voice_expense_parser.dart';
@@ -91,7 +92,7 @@ class _CostsScreenState extends State<CostsScreen> {
     if (!mounted) return;
     setState(() => _micState = _MicState.idle);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Couldn\'t hear that — try again.')),
+      SnackBar(content: Text(S(context).couldntHearThat)),
     );
   }
 
@@ -100,9 +101,7 @@ class _CostsScreenState extends State<CostsScreen> {
     if (parsed == null) {
       _manualController.text = text;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Couldn\'t make out an amount in "$text" — check below.'),
-        ),
+        SnackBar(content: Text(S(context).couldntMakeOutAmount(text))),
       );
       return;
     }
@@ -122,7 +121,10 @@ class _CostsScreenState extends State<CostsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Added ${parsed.category.label} ₹${parsed.amount.toStringAsFixed(0)}',
+          S(context).addedExpense(
+            S(context).expenseCategoryLabel(parsed.category.name),
+            parsed.amount.toStringAsFixed(0),
+          ),
         ),
       ),
     );
@@ -133,9 +135,7 @@ class _CostsScreenState extends State<CostsScreen> {
     final parsed = parseExpensePhrase(text);
     if (parsed == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Enter an amount, e.g. "Petrol 300".'),
-        ),
+        SnackBar(content: Text(S(context).enterAmountExample)),
       );
       return;
     }
@@ -146,8 +146,9 @@ class _CostsScreenState extends State<CostsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = S(context);
     return Scaffold(
-      appBar: AppBar(title: const ScreenTitle('Add Expense')),
+      appBar: AppBar(title: ScreenTitle(s.addExpenseTitle)),
       body: StreamBuilder<List<Expense>>(
         stream: AppDatabase.instance.watchRecentExpenses(limit: 100),
         builder: (context, snapshot) {
@@ -164,7 +165,7 @@ class _CostsScreenState extends State<CostsScreen> {
                 _MicButton(state: _micState, onTap: _toggleListening),
                 const SizedBox(height: AppSpacing.md),
                 Text(
-                  _micStateLabel(),
+                  _micStateLabel(s),
                   textAlign: TextAlign.center,
                   style: AppTextStyles.body,
                 ),
@@ -174,8 +175,8 @@ class _CostsScreenState extends State<CostsScreen> {
                     Expanded(
                       child: TextField(
                         controller: _manualController,
-                        decoration: const InputDecoration(
-                          hintText: 'Or type e.g. Petrol 300',
+                        decoration: InputDecoration(
+                          hintText: s.orTypeExample,
                         ),
                         onSubmitted: (_) => _submitManualEntry(),
                       ),
@@ -191,7 +192,7 @@ class _CostsScreenState extends State<CostsScreen> {
                   const SizedBox(height: AppSpacing.lg),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: Text('Recent', style: AppTextStyles.label),
+                    child: Text(s.recent, style: AppTextStyles.label),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Wrap(
@@ -202,7 +203,7 @@ class _CostsScreenState extends State<CostsScreen> {
                       return Chip(
                         avatar: Icon(cat.icon, size: 16, color: AppColors.primaryGreen),
                         label: Text(
-                          '${cat.label} ${formatRupees(e.amount)}',
+                          '${s.expenseCategoryLabel(cat.name)} ${formatRupees(e.amount)}',
                         ),
                         backgroundColor: AppColors.white,
                         side: const BorderSide(color: AppColors.cardBorder),
@@ -212,7 +213,7 @@ class _CostsScreenState extends State<CostsScreen> {
                   const SizedBox(height: AppSpacing.lg),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: Text('All expenses', style: AppTextStyles.label),
+                    child: Text(s.allExpenses, style: AppTextStyles.label),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   AppCard(
@@ -229,10 +230,10 @@ class _CostsScreenState extends State<CostsScreen> {
                   ),
                 ] else if (_micState != _MicState.listening) ...[
                   const SizedBox(height: AppSpacing.xl),
-                  const EmptyState(
+                  EmptyState(
                     icon: Icons.mic_none_rounded,
-                    title: 'No expenses yet',
-                    message: 'Tap the mic to add your first expense.',
+                    title: s.noExpensesYet,
+                    message: s.tapMicToAddFirst,
                   ),
                 ],
               ],
@@ -243,16 +244,16 @@ class _CostsScreenState extends State<CostsScreen> {
     );
   }
 
-  String _micStateLabel() {
+  String _micStateLabel(Strings s) {
     switch (_micState) {
       case _MicState.idle:
-        return 'Tap and speak, e.g. "Petrol 300"';
+        return s.tapAndSpeakExample;
       case _MicState.initializing:
-        return 'Starting...';
+        return s.starting;
       case _MicState.listening:
-        return _liveTranscript.isEmpty ? 'Listening...' : _liveTranscript;
+        return _liveTranscript.isEmpty ? s.listening : _liveTranscript;
       case _MicState.unavailable:
-        return 'Voice isn\'t available on this device. Type below instead.';
+        return s.voiceNotAvailable;
     }
   }
 }
@@ -321,7 +322,7 @@ class _ExpenseTile extends StatelessWidget {
         backgroundColor: AppColors.primaryGreen.withValues(alpha: 0.1),
         child: Icon(category.icon, color: AppColors.primaryGreen),
       ),
-      title: Text(category.label, style: AppTextStyles.body),
+      title: Text(S(context).expenseCategoryLabel(category.name), style: AppTextStyles.body),
       subtitle: Text(formatRelativeDate(expense.timestamp), style: AppTextStyles.bodyMuted),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
@@ -355,7 +356,7 @@ class _ExpenseEditSheetState extends State<_ExpenseEditSheet> {
     final amount = double.tryParse(_amount.text);
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Enter a valid amount.')));
+          .showSnackBar(SnackBar(content: Text(S(context).enterValidAmount)));
       return;
     }
     await AppDatabase.instance.updateExpense(
@@ -388,13 +389,14 @@ class _ExpenseEditSheetState extends State<_ExpenseEditSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Edit expense', style: AppTextStyles.screenTitle),
+          Text(S(context).editExpense, style: AppTextStyles.screenTitle),
           const SizedBox(height: AppSpacing.md),
           DropdownButtonFormField<ExpenseCategory>(
             initialValue: _category,
-            decoration: const InputDecoration(labelText: 'Category'),
+            decoration: InputDecoration(labelText: S(context).category),
             items: ExpenseCategory.values
-                .map((c) => DropdownMenuItem(value: c, child: Text(c.label)))
+                .map((c) => DropdownMenuItem(
+                    value: c, child: Text(S(context).expenseCategoryLabel(c.name))))
                 .toList(),
             onChanged: (v) => setState(() => _category = v ?? _category),
           ),
@@ -402,15 +404,15 @@ class _ExpenseEditSheetState extends State<_ExpenseEditSheet> {
           TextField(
             controller: _amount,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Amount (₹)'),
+            decoration: InputDecoration(labelText: S(context).amountRupees),
           ),
           const SizedBox(height: AppSpacing.lg),
-          ElevatedButton(onPressed: _save, child: const Text('Save changes')),
+          ElevatedButton(onPressed: _save, child: Text(S(context).saveChanges)),
           const SizedBox(height: AppSpacing.sm),
           OutlinedButton(
             onPressed: _delete,
             style: OutlinedButton.styleFrom(foregroundColor: AppColors.redAlert),
-            child: const Text('Delete'),
+            child: Text(S(context).delete),
           ),
         ],
       ),

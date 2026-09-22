@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../data/database.dart';
+import '../l10n/strings.dart';
 import '../models/platform.dart';
 import '../models/rate_cut_alert.dart';
 import '../models/week_range.dart';
@@ -84,11 +85,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: !snapshot.hasData
                       ? const SizedBox.shrink()
                       : snapshot.data!.isEmpty
-                          ? const EmptyState(
+                          ? EmptyState(
                               icon: Icons.bar_chart_rounded,
-                              title: 'No data yet',
-                              message:
-                                  'Import screenshots to see your weekly summary.',
+                              title: S(context).noDataYet,
+                              message: S(context).importScreenshotsPrompt,
                             )
                           : _DashboardBody(data: snapshot.data!),
                 ),
@@ -247,7 +247,7 @@ class _RateCutAlertCard extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
-                  '${platform.label} rate cut detected',
+                  S(context).rateCutDetected(platform.label),
                   style: AppTextStyles.sectionHeader
                       .copyWith(color: AppColors.redAlert),
                 ),
@@ -271,7 +271,7 @@ class _RateCutAlertCard extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: TextButton(
               onPressed: onViewDetails,
-              child: const Text('View Full Details'),
+              child: Text(S(context).viewFullDetails),
             ),
           ),
         ],
@@ -291,7 +291,7 @@ class _AllGoodRow extends StatelessWidget {
             color: AppColors.successGreen, size: 20),
         const SizedBox(width: AppSpacing.xs),
         Text(
-          'All good! No rate cut detected this week.',
+          S(context).allGoodNoRateCut,
           style: AppTextStyles.bodyMuted,
         ),
       ],
@@ -322,7 +322,7 @@ class _DashboardBody extends StatelessWidget {
               if (data.bestHour != null)
                 Expanded(
                   child: _HourCard(
-                    label: 'Best Hour',
+                    label: S(context).bestHour,
                     rate: data.bestHour!,
                     color: AppColors.primaryGreen,
                   ),
@@ -332,7 +332,7 @@ class _DashboardBody extends StatelessWidget {
               if (data.worstHour != null)
                 Expanded(
                   child: _HourCard(
-                    label: 'Worst Hour',
+                    label: S(context).worstHour,
                     rate: data.worstHour!,
                     color: AppColors.mutedGrey,
                   ),
@@ -342,7 +342,7 @@ class _DashboardBody extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
         ],
         if (data.topZones.isNotEmpty) ...[
-          const SectionHeader('Best Zones'),
+          SectionHeader(S(context).bestZones),
           AppCard(
             padding: EdgeInsets.zero,
             child: Column(
@@ -358,7 +358,7 @@ class _DashboardBody extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
         ],
         if (data.totalIncentive > 0) ...[
-          const SectionHeader('Was the incentive worth it?'),
+          SectionHeader(S(context).wasIncentiveWorthIt),
           _IncentiveCard(data: data),
         ],
       ],
@@ -387,7 +387,7 @@ class _NetEarningsHeroCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Net Earnings',
+                  S(context).netEarnings,
                   style: AppTextStyles.label
                       .copyWith(color: AppColors.white.withValues(alpha: 0.85)),
                 ),
@@ -414,9 +414,9 @@ class _NetEarningsHeroCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              _MiniStat(label: 'Gross', value: formatRupees(data.gross)),
+              _MiniStat(label: S(context).gross, value: formatRupees(data.gross)),
               const SizedBox(height: AppSpacing.sm),
-              _MiniStat(label: 'Costs', value: formatRupees(data.costs)),
+              _MiniStat(label: S(context).costs, value: formatRupees(data.costs)),
             ],
           ),
         ],
@@ -518,7 +518,7 @@ class _IncentiveCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('With incentive', style: AppTextStyles.label),
+                Text(S(context).withIncentive, style: AppTextStyles.label),
                 Row(
                   children: [
                     Text(formatRupees(data.net), style: AppTextStyles.statNumber),
@@ -541,7 +541,7 @@ class _IncentiveCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Without', style: AppTextStyles.label),
+                Text(S(context).without, style: AppTextStyles.label),
                 Text(
                   formatRupees(data.netWithoutIncentive),
                   style: AppTextStyles.statNumber,
@@ -595,7 +595,7 @@ class _OfflinePill extends StatelessWidget {
         ),
         const SizedBox(width: 4),
         Text(
-          'Offline',
+          S(context).offline,
           style: Theme.of(context)
               .textTheme
               .bodySmall

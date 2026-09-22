@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import 'l10n/app_locale_scope.dart';
 import 'screens/root_shell.dart';
 import 'theme/app_theme.dart';
 
@@ -15,11 +16,13 @@ class AsliKamaiApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'AsliKamai',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      home: const RootShell(),
+    return AppLocaleScope(
+      child: MaterialApp(
+        title: 'AsliKamai',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        home: const RootShell(),
+      ),
     );
   }
 }

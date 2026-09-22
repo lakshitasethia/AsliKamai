@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../data/database.dart';
+import '../l10n/strings.dart';
 import '../models/rider_profile.dart';
 import '../models/week_range.dart';
 import '../models/weekly_dashboard_data.dart';
@@ -53,9 +54,9 @@ class _ShareCardScreenState extends State<ShareCardScreen> {
       final path = await exportShareCardPng(_boundaryKey);
       if (!mounted) return;
       final rate = data.netPerHour;
-      final caption = rate == null
-          ? 'Meri Asli Kamai this week, via AsliKamai.'
-          : 'Meri Asli Kamai this week: ${formatRupees(rate)}/hour after costs. — via AsliKamai';
+      final s = S(context);
+      final caption =
+          rate == null ? s.shareCaptionNoRate : s.shareCaption(formatRupees(rate));
       await Share.shareXFiles([XFile(path)], text: caption);
     } finally {
       if (mounted) setState(() => _sharing = false);
@@ -64,18 +65,19 @@ class _ShareCardScreenState extends State<ShareCardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = S(context);
     return Scaffold(
-      appBar: AppBar(title: const ScreenTitle('Share Card')),
+      appBar: AppBar(title: ScreenTitle(s.shareCard)),
       body: FutureBuilder<WeeklyDashboardData>(
         future: _dataFuture,
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const SizedBox.shrink();
           final data = snapshot.data!;
           if (data.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.share_outlined,
-              title: 'Nothing to share yet',
-              message: 'Import this week\'s screenshots first, then come back here.',
+              title: s.nothingToShareYet,
+              message: s.importScreenshotsFirst,
             );
           }
           return ListView(
@@ -94,11 +96,9 @@ class _ShareCardScreenState extends State<ShareCardScreen> {
               const SizedBox(height: AppSpacing.md),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Include my name'),
+                title: Text(s.includeMyName),
                 subtitle: Text(
-                  _riderName.isEmpty
-                      ? 'Set your name in More → Your name & platforms'
-                      : 'Off by default — the card stays anonymous unless you turn this on.',
+                  _riderName.isEmpty ? s.setYourNameHint : s.includeMyNameOff,
                   style: AppTextStyles.bodyMuted,
                 ),
                 value: _includeName && _riderName.isNotEmpty,
@@ -116,7 +116,7 @@ class _ShareCardScreenState extends State<ShareCardScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.white),
                       )
                     : const Icon(Icons.share_outlined),
-                label: Text(_sharing ? 'Preparing…' : 'Share'),
+                label: Text(_sharing ? s.preparingEllipsis : s.shareButton),
               ),
             ],
           );
@@ -170,17 +170,22 @@ class _ShareCard extends StatelessWidget {
               style: AppTextStyles.bigNumber.copyWith(fontSize: 40),
             ),
             Text(
-              'net, after costs',
+              S(context).netAfterCosts,
               style: AppTextStyles.body.copyWith(color: AppColors.white.withValues(alpha: 0.85)),
             ),
             const SizedBox(height: AppSpacing.md),
           ],
           Row(
             children: [
-              Expanded(child: _CardStat(label: 'Net earnings', value: formatRupees(data.net))),
               Expanded(
                 child: _CardStat(
-                  label: 'Distance',
+                  label: S(context).shareCardNetEarnings,
+                  value: formatRupees(data.net),
+                ),
+              ),
+              Expanded(
+                child: _CardStat(
+                  label: S(context).distance,
                   value: '${data.totalKm.toStringAsFixed(0)} km',
                 ),
               ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/database.dart';
+import '../l10n/strings.dart';
 import '../models/platform.dart';
 import '../models/rate_cut_alert.dart';
 import '../theme/app_colors.dart';
@@ -22,8 +23,9 @@ class RateCutDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final platform = GigPlatform.fromKey(alert.platform);
+    final s = S(context);
     return Scaffold(
-      appBar: AppBar(title: const ScreenTitle('Rate Cut Alert')),
+      appBar: AppBar(title: ScreenTitle(s.rateCutAlertTitle)),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.screenPadding),
         children: [
@@ -42,7 +44,7 @@ class RateCutDetailsScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Last week', style: AppTextStyles.label),
+                      Text(s.lastWeek, style: AppTextStyles.label),
                       const SizedBox(height: AppSpacing.xs),
                       Text(
                         '${formatRupees(alert.lastWeekRatePerKm)}/km',
@@ -56,7 +58,7 @@ class RateCutDetailsScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('This week', style: AppTextStyles.label),
+                      Text(s.thisWeek, style: AppTextStyles.label),
                       const SizedBox(height: AppSpacing.xs),
                       Text(
                         '${formatRupees(alert.thisWeekRatePerKm)}/km',
@@ -71,12 +73,11 @@ class RateCutDetailsScreen extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'That\'s a ${alert.dropPercent.toStringAsFixed(0)}% drop in pay '
-            'per kilometre on ${platform.label} compared to last week.',
+            s.rateDropSummary(alert.dropPercent.toStringAsFixed(0), platform.label),
             style: AppTextStyles.body,
           ),
           const SizedBox(height: AppSpacing.lg),
-          Text('Evidence (this week\'s orders)', style: AppTextStyles.sectionHeader),
+          Text(s.evidenceThisWeeksOrders, style: AppTextStyles.sectionHeader),
           const SizedBox(height: AppSpacing.sm),
           AppCard(
             padding: EdgeInsets.zero,

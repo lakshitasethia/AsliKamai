@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 
 import '../data/database.dart';
+import '../l10n/strings.dart';
 import '../models/letter_template.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -22,8 +23,9 @@ class LetterGeneratorScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = S(context);
     return Scaffold(
-      appBar: AppBar(title: const ScreenTitle('Letter Generator')),
+      appBar: AppBar(title: ScreenTitle(s.letterGeneratorTitle)),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.screenPadding),
         children: [
@@ -35,13 +37,12 @@ class LetterGeneratorScreen extends StatelessWidget {
               border: Border.all(color: AppColors.redAlert.withValues(alpha: 0.3)),
             ),
             child: Text(
-              'These are information-request drafts, not legal advice, and '
-              'have not yet been reviewed by a labour lawyer or union.',
+              s.notLegalAdviceBanner,
               style: AppTextStyles.body,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          const SectionHeader('Templates'),
+          SectionHeader(s.templates),
           AppCard(
             padding: EdgeInsets.zero,
             child: Column(
@@ -54,14 +55,14 @@ class LetterGeneratorScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          const SectionHeader('History'),
+          SectionHeader(s.history),
           StreamBuilder<List<Letter>>(
             stream: AppDatabase.instance.watchAllLetters(),
             builder: (context, snapshot) {
               final letters = snapshot.data ?? [];
               if (letters.isEmpty) {
                 return Text(
-                  'No letters generated yet.',
+                  s.noLettersYet,
                   style: AppTextStyles.bodyMuted,
                 );
               }
@@ -93,8 +94,8 @@ class _TemplateTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: Icon(type.icon, color: AppColors.primaryGreen),
-      title: Text(type.label, style: AppTextStyles.body),
-      subtitle: Text(type.description, style: AppTextStyles.bodyMuted),
+      title: Text(S(context).letterTemplateLabel(type.name), style: AppTextStyles.body),
+      subtitle: Text(S(context).letterTemplateDescription(type.name), style: AppTextStyles.bodyMuted),
       isThreeLine: true,
       trailing: const Icon(Icons.chevron_right, color: AppColors.mutedGrey),
       onTap: () => Navigator.of(context).push(
@@ -115,19 +116,20 @@ class _LetterHistoryTile extends StatelessWidget {
   }
 
   Future<void> _delete(BuildContext context) async {
+    final s = S(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete this letter?'),
-        content: const Text('This can\'t be undone.'),
+        title: Text(s.deleteThisLetter),
+        content: Text(s.thisCannotBeUndone),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(s.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
+            child: Text(s.delete),
           ),
         ],
       ),
@@ -145,7 +147,7 @@ class _LetterHistoryTile extends StatelessWidget {
     );
     return ListTile(
       leading: Icon(type.icon, color: AppColors.primaryGreen),
-      title: Text(type.label, style: AppTextStyles.body),
+      title: Text(S(context).letterTemplateLabel(type.name), style: AppTextStyles.body),
       subtitle: Text(
         '${lang.label} • ${formatRelativeDate(letter.generatedAt)}',
         style: AppTextStyles.bodyMuted,

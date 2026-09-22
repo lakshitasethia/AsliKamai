@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../l10n/strings.dart';
 import '../models/parsed_order.dart';
 import '../models/platform.dart';
 import '../services/gemini_vision_service.dart';
@@ -45,7 +46,7 @@ class _ImportScreenState extends State<ImportScreen> {
     } catch (e) {
       setState(() {
         _status = _ImportStatus.error;
-        _errorMessage = 'Couldn\'t open the gallery. Try again.';
+        _errorMessage = S(context).couldntOpenGallery;
       });
       return;
     }
@@ -74,8 +75,7 @@ class _ImportScreenState extends State<ImportScreen> {
         if (!mounted) return;
         setState(() {
           _status = _ImportStatus.error;
-          _errorMessage =
-              'Screenshot reading isn\'t set up yet (missing Gemini API key).';
+          _errorMessage = S(context).screenshotReadingNotSetUp;
         });
         return;
       } catch (e) {
@@ -106,11 +106,7 @@ class _ImportScreenState extends State<ImportScreen> {
         _lastImportOrderCount = savedCount;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Saved $savedCount ${savedCount == 1 ? 'order' : 'orders'}.',
-          ),
-        ),
+        SnackBar(content: Text(S(context).savedOrders(savedCount))),
       );
     }
   }
@@ -118,12 +114,13 @@ class _ImportScreenState extends State<ImportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const ScreenTitle('Import This Week\'s Screenshots')),
-      body: _buildBody(),
+      appBar: AppBar(title: ScreenTitle(S(context).importScreenTitle)),
+      body: _buildBody(context),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(BuildContext context) {
+    final s = S(context);
     if (_status == _ImportStatus.parsing) {
       return Center(
         child: Padding(
@@ -134,8 +131,10 @@ class _ImportScreenState extends State<ImportScreen> {
               const CircularProgressIndicator(color: AppColors.primaryGreen),
               const SizedBox(height: AppSpacing.md),
               Text(
-                'Reading screenshot '
-                '${(_parsedCount + 1).clamp(1, _totalCount)} of $_totalCount…',
+                s.readingScreenshotOf(
+                  (_parsedCount + 1).clamp(1, _totalCount),
+                  _totalCount,
+                ),
                 style: AppTextStyles.body,
               ),
             ],
@@ -146,8 +145,8 @@ class _ImportScreenState extends State<ImportScreen> {
 
     if (_status == _ImportStatus.error) {
       return ErrorStateView(
-        message: _errorMessage ?? 'Couldn\'t read screenshots.',
-        retryLabel: 'Try again',
+        message: _errorMessage ?? s.couldntReadScreenshots,
+        retryLabel: s.tryAgain,
         onRetry: () => setState(() => _status = _ImportStatus.idle),
       );
     }
@@ -157,9 +156,9 @@ class _ImportScreenState extends State<ImportScreen> {
         Expanded(
           child: EmptyState(
             icon: Icons.photo_library_outlined,
-            title: 'No screenshots yet',
-            message: 'Tap to pick from gallery.',
-            actionLabel: 'Pick Screenshots',
+            title: s.noScreenshotsYet,
+            message: s.tapToPickFromGallery,
+            actionLabel: s.pickScreenshots,
             onAction: _pickAndImport,
           ),
         ),
@@ -167,9 +166,10 @@ class _ImportScreenState extends State<ImportScreen> {
           Padding(
             padding: const EdgeInsets.all(AppSpacing.screenPadding),
             child: Text(
-              'Last import: ${_lastImportAt!.day}/${_lastImportAt!.month} '
-              '• $_lastImportOrderCount '
-              '${_lastImportOrderCount == 1 ? 'order' : 'orders'}',
+              s.lastImportSummary(
+                '${_lastImportAt!.day}/${_lastImportAt!.month}',
+                _lastImportOrderCount!,
+              ),
               style: AppTextStyles.bodyMuted,
             ),
           ),

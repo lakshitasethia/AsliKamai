@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:printing/printing.dart';
 
 import '../data/database.dart';
+import '../l10n/strings.dart';
 import '../models/evidence_type.dart';
 import '../services/evidence_pdf_export.dart';
 import '../services/image_hash.dart';
@@ -47,7 +48,7 @@ class _EvidenceScreenState extends State<EvidenceScreen>
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Couldn\'t open the gallery. Try again.')),
+        SnackBar(content: Text(S(context).couldntOpenGallery)),
       );
       return;
     }
@@ -84,8 +85,8 @@ class _EvidenceScreenState extends State<EvidenceScreen>
       SnackBar(
         content: Text(
           savedCount == 0
-              ? 'Already saved — no new documents added.'
-              : 'Added $savedCount ${savedCount == 1 ? 'document' : 'documents'}.',
+              ? S(context).alreadySavedNoNew
+              : S(context).addedDocuments(savedCount),
         ),
       ),
     );
@@ -103,7 +104,7 @@ class _EvidenceScreenState extends State<EvidenceScreen>
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Couldn\'t export the PDF. Try again.')),
+        SnackBar(content: Text(S(context).couldntExportPdf)),
       );
     } finally {
       if (mounted) setState(() => _exporting = false);
@@ -112,24 +113,24 @@ class _EvidenceScreenState extends State<EvidenceScreen>
 
   @override
   Widget build(BuildContext context) {
+    final s = S(context);
     return Scaffold(
       appBar: AppBar(
-        title: const ScreenTitle('Evidence Locker'),
+        title: ScreenTitle(s.evidenceLockerTitle),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
-          tabs: const [
-            Tab(text: 'All'),
-            Tab(text: 'Notices'),
-            Tab(text: 'Tickets'),
-            Tab(text: 'Payouts'),
+          tabs: [
+            Tab(text: s.tabAll),
+            for (final type in EvidenceType.values)
+              Tab(text: s.evidenceTypeLabel(type.name)),
           ],
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add_a_photo_outlined),
             onPressed: _addDocuments,
-            tooltip: 'Add Document',
+            tooltip: s.addDocument,
           ),
         ],
       ),
@@ -183,9 +184,9 @@ class _EvidenceList extends StatelessWidget {
     if (items.isEmpty) {
       return EmptyState(
         icon: Icons.lock_outline_rounded,
-        title: 'No evidence yet',
-        message: 'Add documents from your gallery.',
-        actionLabel: 'Add Document',
+        title: S(context).noEvidenceYet,
+        message: S(context).addDocumentsFromGallery,
+        actionLabel: S(context).addDocument,
         onAction: onAdd,
       );
     }
@@ -221,7 +222,7 @@ class _EvidenceList extends StatelessWidget {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.picture_as_pdf_outlined),
-            label: Text('Export ${items.length} to PDF'),
+            label: Text(S(context).exportToPdf(items.length)),
           ),
         ),
       ],
@@ -266,7 +267,7 @@ class _EvidenceTile extends StatelessWidget {
                       const SizedBox(width: AppSpacing.xs),
                       Expanded(
                         child: Text(
-                          type.label,
+                          S(context).evidenceTypeLabel(type.name),
                           style: AppTextStyles.label,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -299,12 +300,12 @@ class _TypePickerSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Save as', style: AppTextStyles.screenTitle),
+            Text(S(context).saveAs, style: AppTextStyles.screenTitle),
             const SizedBox(height: AppSpacing.md),
             for (final type in EvidenceType.values)
               ListTile(
                 leading: Icon(type.icon, color: AppColors.primaryGreen),
-                title: Text(type.label),
+                title: Text(S(context).evidenceTypeLabel(type.name)),
                 onTap: () => Navigator.of(context).pop(type),
               ),
           ],

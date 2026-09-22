@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../data/database.dart';
+import '../l10n/strings.dart';
 import '../models/evidence_type.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -26,19 +27,20 @@ class EvidenceDetailScreen extends StatelessWidget {
   }
 
   Future<void> _delete(BuildContext context) async {
+    final s = S(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete this document?'),
-        content: const Text('This can\'t be undone.'),
+        title: Text(s.deleteThisDocument),
+        content: Text(s.thisCannotBeUndone),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(s.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
+            child: Text(s.delete),
           ),
         ],
       ),
@@ -53,7 +55,7 @@ class EvidenceDetailScreen extends StatelessWidget {
     final type = EvidenceType.fromKey(item.type);
     return Scaffold(
       appBar: AppBar(
-        title: ScreenTitle(type.label),
+        title: ScreenTitle(S(context).evidenceTypeLabel(type.name)),
         actions: [
           IconButton(
             icon: const Icon(Icons.share_outlined),
@@ -77,15 +79,15 @@ class EvidenceDetailScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Captured', style: AppTextStyles.label),
+                Text(S(context).captured, style: AppTextStyles.label),
                 Text(formatRelativeDate(item.capturedAt), style: AppTextStyles.body),
                 if (item.notes != null && item.notes!.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.sm),
-                  Text('Notes', style: AppTextStyles.label),
+                  Text(S(context).notes, style: AppTextStyles.label),
                   Text(item.notes!, style: AppTextStyles.body),
                 ],
                 const SizedBox(height: AppSpacing.sm),
-                Text('SHA-256 (proof of integrity)', style: AppTextStyles.label),
+                Text(S(context).shaProofOfIntegrity, style: AppTextStyles.label),
                 SelectableText(
                   item.fileHash,
                   style: AppTextStyles.bodyMuted.copyWith(fontFamily: 'monospace'),

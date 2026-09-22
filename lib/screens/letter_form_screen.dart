@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 
 import '../data/database.dart';
+import '../l10n/strings.dart';
 import '../models/evidence_type.dart';
 import '../models/letter_template.dart';
 import '../models/platform.dart';
@@ -167,8 +168,9 @@ class _LetterFormScreenState extends State<LetterFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = S(context);
     return Scaffold(
-      appBar: AppBar(title: ScreenTitle(widget.type.label)),
+      appBar: AppBar(title: ScreenTitle(s.letterTemplateLabel(widget.type.name))),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.screenPadding),
         children: [
@@ -180,21 +182,20 @@ class _LetterFormScreenState extends State<LetterFormScreen> {
               border: Border.all(color: AppColors.redAlert.withValues(alpha: 0.3)),
             ),
             child: Text(
-              'This generates an information request, not legal advice — a '
-              'draft template pending review by a labour lawyer or union.',
+              s.letterFormNotLegalAdvice,
               style: AppTextStyles.body,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
           TextField(
             controller: _nameController,
-            decoration: const InputDecoration(labelText: 'Your name'),
+            decoration: InputDecoration(labelText: s.yourName),
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: AppSpacing.sm),
           DropdownButtonFormField<GigPlatform>(
             initialValue: _platform,
-            decoration: const InputDecoration(labelText: 'Platform'),
+            decoration: InputDecoration(labelText: s.platformLabel),
             items: GigPlatform.values
                 .where((p) => p != GigPlatform.other)
                 .map((p) => DropdownMenuItem(value: p, child: Text(p.label)))
@@ -202,7 +203,7 @@ class _LetterFormScreenState extends State<LetterFormScreen> {
             onChanged: (v) => setState(() => _platform = v ?? _platform),
           ),
           const SizedBox(height: AppSpacing.sm),
-          Text('Language', style: AppTextStyles.label),
+          Text(s.language, style: AppTextStyles.label),
           const SizedBox(height: AppSpacing.xs),
           Wrap(
             spacing: AppSpacing.sm,
@@ -216,7 +217,7 @@ class _LetterFormScreenState extends State<LetterFormScreen> {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          ..._templateFields(),
+          ..._templateFields(s),
           const SizedBox(height: AppSpacing.lg),
           ElevatedButton(
             onPressed: _isValid && !_generating ? _generate : null,
@@ -226,38 +227,38 @@ class _LetterFormScreenState extends State<LetterFormScreen> {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.white),
                   )
-                : const Text('Generate & Preview'),
+                : Text(s.generateAndPreview),
           ),
         ],
       ),
     );
   }
 
-  List<Widget> _templateFields() {
+  List<Widget> _templateFields(Strings s) {
     switch (widget.type) {
       case LetterTemplateType.deductionExplanation:
         return [
           OutlinedButton.icon(
             onPressed: _pickOrder,
             icon: const Icon(Icons.receipt_long_outlined),
-            label: const Text('Reference an order'),
+            label: Text(s.referenceAnOrder),
           ),
           const SizedBox(height: AppSpacing.sm),
           TextField(
             controller: _orderRefController,
-            decoration: const InputDecoration(labelText: 'Order #'),
+            decoration: InputDecoration(labelText: s.orderNumberFieldLabel),
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: AppSpacing.sm),
           TextField(
             controller: _orderDateController,
-            decoration: const InputDecoration(labelText: 'Order date'),
+            decoration: InputDecoration(labelText: s.orderDateLabel),
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: AppSpacing.sm),
           TextField(
             controller: _orderAmountController,
-            decoration: const InputDecoration(labelText: 'Amount paid (₹)'),
+            decoration: InputDecoration(labelText: s.amountPaidLabel),
             keyboardType: TextInputType.number,
             onChanged: (_) => setState(() {}),
           ),
@@ -267,12 +268,12 @@ class _LetterFormScreenState extends State<LetterFormScreen> {
           OutlinedButton.icon(
             onPressed: _pickNotice,
             icon: const Icon(Icons.warning_amber_rounded),
-            label: const Text('Reference a notice'),
+            label: Text(s.referenceANotice),
           ),
           const SizedBox(height: AppSpacing.sm),
           TextField(
             controller: _blockDateController,
-            decoration: const InputDecoration(labelText: 'Date the ID was blocked'),
+            decoration: InputDecoration(labelText: s.dateIdBlocked),
             onChanged: (_) => setState(() {}),
           ),
         ];
@@ -280,8 +281,8 @@ class _LetterFormScreenState extends State<LetterFormScreen> {
         return [
           TextField(
             controller: _detailsController,
-            decoration: const InputDecoration(
-              labelText: 'Describe the issue',
+            decoration: InputDecoration(
+              labelText: s.describeIssue,
               alignLabelWithHint: true,
             ),
             maxLines: 5,
@@ -306,12 +307,12 @@ class _OrderPickerSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Pick an order', style: AppTextStyles.screenTitle),
+            Text(S(context).pickAnOrder, style: AppTextStyles.screenTitle),
             const SizedBox(height: AppSpacing.md),
             if (orders.isEmpty)
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.md),
-                child: Text('No orders imported yet.', style: AppTextStyles.bodyMuted),
+                child: Text(S(context).noOrdersImportedYet, style: AppTextStyles.bodyMuted),
               )
             else
               Flexible(
@@ -324,7 +325,7 @@ class _OrderPickerSheet extends StatelessWidget {
                     final total = o.basePay + o.incentive + o.tip;
                     return ListTile(
                       leading: Icon(platform.icon, color: platform.color),
-                      title: Text('${platform.label} • ${o.orderRef ?? 'no ref'}'),
+                      title: Text('${platform.label} • ${o.orderRef ?? S(context).noRef}'),
                       subtitle: Text(_formatDate(o.timestamp)),
                       trailing: Text(formatRupees(total)),
                       onTap: () => Navigator.of(context).pop(o),
@@ -353,13 +354,13 @@ class _NoticePickerSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Pick a notice', style: AppTextStyles.screenTitle),
+            Text(S(context).pickANotice, style: AppTextStyles.screenTitle),
             const SizedBox(height: AppSpacing.md),
             if (notices.isEmpty)
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 child: Text(
-                  'No Notices saved in the Evidence Locker yet.',
+                  S(context).noNoticesSaved,
                   style: AppTextStyles.bodyMuted,
                 ),
               )

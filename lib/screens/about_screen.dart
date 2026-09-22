@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../l10n/strings.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/screen_title.dart';
@@ -15,8 +16,9 @@ class AboutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = S(context);
     return Scaffold(
-      appBar: AppBar(title: const ScreenTitle('Privacy & about')),
+      appBar: AppBar(title: ScreenTitle(s.privacyAboutAsliKamai)),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.screenPadding),
         children: [
@@ -35,43 +37,19 @@ class AboutScreen extends StatelessWidget {
             },
           ),
           const SizedBox(height: AppSpacing.lg),
-          Text(
-            'AsliKamai helps Karnataka\'s delivery and ride-hailing gig '
-            'workers see their real net earnings, catch pay-rate cuts, and '
-            'build evidence for disputes under the Karnataka Platform-Based '
-            'Gig Workers Act.',
-            style: AppTextStyles.body,
-          ),
+          Text(s.aboutIntro, style: AppTextStyles.body),
           const SizedBox(height: AppSpacing.md),
-          Text('Your data stays on your phone', style: AppTextStyles.sectionHeader),
+          Text(s.aboutDataStaysHeader, style: AppTextStyles.sectionHeader),
           const SizedBox(height: AppSpacing.xs),
-          Text(
-            'Orders, expenses, evidence photos and letters are stored only '
-            'in this app\'s local database — never sent anywhere except '
-            'when a screenshot is read by the vision AI to extract order '
-            'details, or when you explicitly export, share, or generate a '
-            'letter. There is no account and no cloud sync in this build.',
-            style: AppTextStyles.body,
-          ),
+          Text(s.aboutDataStaysBody, style: AppTextStyles.body),
           const SizedBox(height: AppSpacing.md),
-          Text('You control it', style: AppTextStyles.sectionHeader),
+          Text(s.aboutYouControlHeader, style: AppTextStyles.sectionHeader),
           const SizedBox(height: AppSpacing.xs),
-          Text(
-            'Export everything (More → Export everything) at any time as a '
-            'file you can keep or move elsewhere. Delete everything (More → '
-            'Delete everything) permanently erases all of it from this '
-            'phone.',
-            style: AppTextStyles.body,
-          ),
+          Text(s.aboutYouControlBody, style: AppTextStyles.body),
           const SizedBox(height: AppSpacing.md),
-          Text('Not legal advice', style: AppTextStyles.sectionHeader),
+          Text(s.aboutNotLegalHeader, style: AppTextStyles.sectionHeader),
           const SizedBox(height: AppSpacing.xs),
-          Text(
-            'The Letter Generator drafts information requests citing the '
-            'Act — it is not a substitute for advice from a labour lawyer '
-            'or union, and its templates are pending their review.',
-            style: AppTextStyles.body,
-          ),
+          Text(s.aboutNotLegalBody, style: AppTextStyles.body),
         ],
       ),
     );

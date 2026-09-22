@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/strings.dart';
 import '../models/platform.dart';
 import '../models/rider_profile.dart';
 import '../theme/app_spacing.dart';
@@ -52,14 +53,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     setState(() => _saving = false);
     ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Saved.')));
+        .showSnackBar(SnackBar(content: Text(S(context).savedToast)));
     Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
+    final s = S(context);
     return Scaffold(
-      appBar: AppBar(title: const ScreenTitle('Profile')),
+      appBar: AppBar(title: ScreenTitle(s.profile)),
       body: _loading
           ? const SizedBox.shrink()
           : ListView(
@@ -67,11 +69,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 TextField(
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Your name'),
+                  decoration: InputDecoration(labelText: s.yourName),
                   textCapitalization: TextCapitalization.words,
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                Text('Platform(s) you work', style: AppTextStyles.label),
+                Text(s.platformsYouWork, style: AppTextStyles.label),
                 const SizedBox(height: AppSpacing.xs),
                 Wrap(
                   spacing: AppSpacing.sm,
@@ -102,7 +104,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Save'),
+                      : Text(s.save),
                 ),
               ],
             ),
