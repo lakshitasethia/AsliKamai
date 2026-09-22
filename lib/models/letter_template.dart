@@ -43,15 +43,10 @@ enum LetterLanguage {
   hindi,
   kannada;
 
-  /// Languages offered in the letter form's picker. Kannada is excluded:
-  /// verified directly (isolated from the app, testing all 4 Kannada fonts
-  /// the `printing` package offers) that its pre-base vowel signs — e.g.
-  /// ವಿ = ವ+ಿ — never attach to the right consonant, in every font, while
-  /// Hindi's equivalent (ि) renders correctly. This is a shaping bug in the
-  /// `pdf` package's Kannada support, not fixable by choosing a font.
-  /// [values] still includes kannada so old history entries keep working;
-  /// only the picker is restricted.
-  static const selectable = [LetterLanguage.english, LetterLanguage.hindi];
+  /// Languages offered in the letter form's picker. All three: Hindi and
+  /// Kannada PDFs are rendered through Flutter's text engine (see
+  /// letter_pdf_export.dart), since the `pdf` package can't shape them.
+  static const selectable = LetterLanguage.values;
 
   String get label => switch (this) {
         LetterLanguage.english => 'English',

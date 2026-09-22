@@ -4,13 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// (EN/HI/KN) applied app-wide, not just letters"). Separate from
 /// [LetterLanguage] in letter_template.dart, which is the language a
 /// generated letter's PDF is written in — the two are independent choices.
-///
-/// Unlike letters, Kannada is NOT restricted here: the Kannada PDF bug
-/// (letter_template.dart's [LetterLanguage.selectable] doc) is specific to
-/// the `pdf` package's own text shaper. This screen text renders through
-/// Flutter's normal text engine (the same one used for `असली कमाई` on the
-/// Home tab today), which shapes Kannada correctly — verified on-device
-/// before shipping this toggle.
 enum AppLocale {
   english,
   hindi,
