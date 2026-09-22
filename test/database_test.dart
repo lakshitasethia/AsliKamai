@@ -151,4 +151,38 @@ void main() {
     final all = await db.watchAllLetters().first;
     expect(all, isEmpty);
   });
+
+  test('allOrders/allExpenses/allEvidence/allLetters return every row unfiltered', () async {
+    await db.insertOrderIfNew(entry(hash: 'abc'));
+    await db.insertExpense(ExpensesCompanion.insert(
+      category: 'fuel',
+      amount: 100,
+      timestamp: DateTime(2026, 9, 16),
+    ));
+    await db.insertEvidenceIfNew(evidenceEntry(hash: 'abc'));
+    await db.insertLetter(letterEntry());
+
+    expect(await db.allOrders(), hasLength(1));
+    expect(await db.allExpenses(), hasLength(1));
+    expect(await db.allEvidence(), hasLength(1));
+    expect(await db.allLetters(), hasLength(1));
+  });
+
+  test('deleteEverything empties every table', () async {
+    await db.insertOrderIfNew(entry(hash: 'abc'));
+    await db.insertExpense(ExpensesCompanion.insert(
+      category: 'fuel',
+      amount: 100,
+      timestamp: DateTime(2026, 9, 16),
+    ));
+    await db.insertEvidenceIfNew(evidenceEntry(hash: 'abc'));
+    await db.insertLetter(letterEntry());
+
+    await db.deleteEverything();
+
+    expect(await db.allOrders(), isEmpty);
+    expect(await db.allExpenses(), isEmpty);
+    expect(await db.allEvidence(), isEmpty);
+    expect(await db.allLetters(), isEmpty);
+  });
 }

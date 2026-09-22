@@ -65,9 +65,13 @@ dependencies:
   printing: ^5.13.4
   share_plus: ^10.1.3
 
-  # Letter Generator (Phase 7): minimal local rider profile (name), just
-  # simple key-value settings — not relational data, so no drift table.
+  # Letter Generator (Phase 7)/Settings (Phase 8): local rider profile
+  # (name, platforms), just simple key-value settings — not relational
+  # data, so no drift table.
   shared_preferences: ^2.3.3
+
+  # About screen (Phase 8): app version/build number shown to the rider.
+  package_info_plus: ^8.1.2
 
 dev_dependencies:
   flutter_test:

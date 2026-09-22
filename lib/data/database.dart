@@ -214,6 +214,24 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deleteLetter(int id) =>
       (delete(letters)..where((l) => l.id.equals(id))).go();
+
+  // "Export everything" (Phase 8): every row, unfiltered by week/type.
+  Future<List<Order>> allOrders() => select(orders).get();
+  Future<List<Expense>> allExpenses() => select(expenses).get();
+  Future<List<EvidenceItem>> allEvidence() => select(evidenceItems).get();
+  Future<List<Letter>> allLetters() => select(letters).get();
+
+  /// "Delete everything" (Phase 8): wipes every table. Caller is
+  /// responsible for also clearing [RiderProfile] and the on-disk
+  /// screenshots/letters directories — this only covers the database.
+  Future<void> deleteEverything() {
+    return batch((b) {
+      b.deleteAll(orders);
+      b.deleteAll(expenses);
+      b.deleteAll(evidenceItems);
+      b.deleteAll(letters);
+    });
+  }
 }
 
 LazyDatabase _openConnection() {
