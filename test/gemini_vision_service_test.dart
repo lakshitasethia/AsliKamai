@@ -17,6 +17,14 @@ void main() {
     },
   );
 
+  test('notice-date prompt is anchored to today and ignores the status-bar clock', () {
+    final prompt =
+        GeminiVisionService.buildDocumentDatePrompt(DateTime(2026, 9, 22));
+
+    expect(prompt, contains('2026-09-22'));
+    expect(prompt, contains('status-bar'));
+  });
+
   test('PNG screenshots are sent as image/png, not mislabelled as JPEG', () {
     final png = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
 

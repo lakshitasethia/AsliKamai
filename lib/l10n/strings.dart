@@ -248,6 +248,12 @@ class Strings {
   String get orderDateLabel => _t('Order date', 'ऑर्डर की तारीख', 'ಆರ್ಡರ್ ದಿನಾಂಕ');
   String get amountPaidLabel => _t('Amount paid (₹)', 'भुगतान की गई राशि (₹)', 'ಪಾವತಿಸಿದ ಮೊತ್ತ (₹)');
   String get referenceANotice => _t('Reference a notice', 'किसी नोटिस का हवाला दें', 'ಸೂಚನೆಯನ್ನು ಉಲ್ಲೇಖಿಸಿ');
+  String get readingNoticeDate => _t('Reading the date on the notice…', 'नोटिस पर लिखी तारीख पढ़ी जा रही है…', 'ಸೂಚನೆಯ ಮೇಲಿನ ದಿನಾಂಕ ಓದಲಾಗುತ್ತಿದೆ…');
+  String get noticeDateUnreadable => _t(
+        "Couldn't read a date on the notice — used the day you added it. Please check it.",
+        'नोटिस पर तारीख नहीं पढ़ी जा सकी — जोड़ने वाले दिन की तारीख भरी गई है. कृपया जाँच लें.',
+        'ಸೂಚನೆಯ ಮೇಲಿನ ದಿನಾಂಕ ಓದಲಾಗಲಿಲ್ಲ — ಸೇರಿಸಿದ ದಿನದ ದಿನಾಂಕ ಬಳಸಲಾಗಿದೆ. ದಯವಿಟ್ಟು ಪರಿಶೀಲಿಸಿ.',
+      );
   String get dateIdBlocked => _t('Date the ID was blocked', 'ID ब्लॉक होने की तारीख', 'ID ಬ್ಲಾಕ್ ಆದ ದಿನಾಂಕ');
   String get describeIssue => _t('Describe the issue', 'समस्या बताएं', 'ಸಮಸ್ಯೆಯನ್ನು ವಿವರಿಸಿ');
   String get pickAnOrder => _t('Pick an order', 'एक ऑर्डर चुनें', 'ಒಂದು ಆರ್ಡರ್ ಆಯ್ಕೆಮಾಡಿ');

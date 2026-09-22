@@ -97,6 +97,18 @@ void main() {
     expect(all.map((e) => e.fileHash), ['new', 'old']);
   });
 
+  test('setEvidenceDocumentDate stores the date read off the document', () async {
+    await db.insertEvidenceIfNew(evidenceEntry(hash: 'abc', type: 'notice'));
+    final saved = (await db.watchAllEvidence().first).single;
+    expect(saved.documentDate, isNull);
+
+    await db.setEvidenceDocumentDate(saved.id, DateTime(2026, 9, 20));
+
+    final updated = (await db.watchAllEvidence().first).single;
+    expect(updated.documentDate, DateTime(2026, 9, 20));
+    expect(updated.capturedAt, saved.capturedAt);
+  });
+
   test('deleteEvidence removes the item', () async {
     await db.insertEvidenceIfNew(evidenceEntry(hash: 'abc'));
     final saved = await db.watchAllEvidence().first;

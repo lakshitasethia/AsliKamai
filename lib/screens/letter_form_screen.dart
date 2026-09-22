@@ -9,6 +9,7 @@ import '../models/evidence_type.dart';
 import '../models/letter_template.dart';
 import '../models/platform.dart';
 import '../models/rider_profile.dart';
+import '../services/gemini_vision_service.dart';
 import '../services/letter_content.dart';
 import '../services/letter_pdf_export.dart';
 import '../services/letter_pdf_store.dart';
@@ -49,6 +50,7 @@ class _LetterFormScreenState extends State<LetterFormScreen> {
   GigPlatform _platform = GigPlatform.swiggy;
   LetterLanguage _lang = LetterLanguage.english;
   bool _generating = false;
+  bool _readingNoticeDate = false;
 
   @override
   void initState() {
@@ -110,7 +112,32 @@ class _LetterFormScreenState extends State<LetterFormScreen> {
       builder: (_) => _NoticePickerSheet(notices: notices),
     );
     if (picked == null || !mounted) return;
-    setState(() => _blockDateController.text = _formatDate(picked.capturedAt));
+
+    // A notice added by hand is stamped with the day it was added, not the
+    // day the ID was blocked — so read the date printed on the notice
+    // itself (once; it's cached on the row after that).
+    var date = picked.documentDate;
+    if (date == null) {
+      setState(() => _readingNoticeDate = true);
+      try {
+        date = await GeminiVisionService()
+            .readDocumentDate(await File(picked.filePath).readAsBytes());
+        if (date != null) {
+          await AppDatabase.instance.setEvidenceDocumentDate(picked.id, date);
+        }
+      } catch (e) {
+        debugPrint('AsliKamai: reading notice date failed: $e');
+      }
+      if (!mounted) return;
+      setState(() => _readingNoticeDate = false);
+      if (date == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S(context).noticeDateUnreadable)),
+        );
+      }
+    }
+    setState(() => _blockDateController.text =
+        _formatDate(date ?? picked.capturedAt));
   }
 
   bool get _isValid {
@@ -266,9 +293,17 @@ class _LetterFormScreenState extends State<LetterFormScreen> {
       case LetterTemplateType.idBlockReasons:
         return [
           OutlinedButton.icon(
-            onPressed: _pickNotice,
-            icon: const Icon(Icons.warning_amber_rounded),
-            label: Text(s.referenceANotice),
+            onPressed: _readingNoticeDate ? null : _pickNotice,
+            icon: _readingNoticeDate
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.warning_amber_rounded),
+            label: Text(
+              _readingNoticeDate ? s.readingNoticeDate : s.referenceANotice,
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
           TextField(
@@ -381,7 +416,7 @@ class _NoticePickerSheet extends StatelessWidget {
                           fit: BoxFit.cover,
                         ),
                       ),
-                      title: Text(_formatDate(e.capturedAt)),
+                      title: Text(_formatDate(e.documentDate ?? e.capturedAt)),
                       subtitle: e.notes != null ? Text(e.notes!) : null,
                       onTap: () => Navigator.of(context).pop(e),
                     );

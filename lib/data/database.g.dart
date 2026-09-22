@@ -1226,6 +1226,17 @@ class $EvidenceItemsTable extends EvidenceItems
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _documentDateMeta = const VerificationMeta(
+    'documentDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> documentDate = GeneratedColumn<DateTime>(
+    'document_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _notesMeta = const VerificationMeta('notes');
   @override
   late final GeneratedColumn<String> notes = GeneratedColumn<String>(
@@ -1254,6 +1265,7 @@ class $EvidenceItemsTable extends EvidenceItems
     filePath,
     fileHash,
     capturedAt,
+    documentDate,
     notes,
     createdAt,
   ];
@@ -1304,6 +1316,15 @@ class $EvidenceItemsTable extends EvidenceItems
     } else if (isInserting) {
       context.missing(_capturedAtMeta);
     }
+    if (data.containsKey('document_date')) {
+      context.handle(
+        _documentDateMeta,
+        documentDate.isAcceptableOrUnknown(
+          data['document_date']!,
+          _documentDateMeta,
+        ),
+      );
+    }
     if (data.containsKey('notes')) {
       context.handle(
         _notesMeta,
@@ -1345,6 +1366,10 @@ class $EvidenceItemsTable extends EvidenceItems
         DriftSqlType.dateTime,
         data['${effectivePrefix}captured_at'],
       )!,
+      documentDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}document_date'],
+      ),
       notes: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}notes'],
@@ -1368,6 +1393,12 @@ class EvidenceItem extends DataClass implements Insertable<EvidenceItem> {
   final String filePath;
   final String fileHash;
   final DateTime capturedAt;
+
+  /// The date printed on the document itself (e.g. the date on a block
+  /// notice), read by Gemini the first time it's needed. Differs from
+  /// [capturedAt] for anything added by hand, which is stamped with the
+  /// day the rider added it. Null = not read yet, or unreadable.
+  final DateTime? documentDate;
   final String? notes;
   final DateTime createdAt;
   const EvidenceItem({
@@ -1376,6 +1407,7 @@ class EvidenceItem extends DataClass implements Insertable<EvidenceItem> {
     required this.filePath,
     required this.fileHash,
     required this.capturedAt,
+    this.documentDate,
     this.notes,
     required this.createdAt,
   });
@@ -1387,6 +1419,9 @@ class EvidenceItem extends DataClass implements Insertable<EvidenceItem> {
     map['file_path'] = Variable<String>(filePath);
     map['file_hash'] = Variable<String>(fileHash);
     map['captured_at'] = Variable<DateTime>(capturedAt);
+    if (!nullToAbsent || documentDate != null) {
+      map['document_date'] = Variable<DateTime>(documentDate);
+    }
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
     }
@@ -1401,6 +1436,9 @@ class EvidenceItem extends DataClass implements Insertable<EvidenceItem> {
       filePath: Value(filePath),
       fileHash: Value(fileHash),
       capturedAt: Value(capturedAt),
+      documentDate: documentDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(documentDate),
       notes: notes == null && nullToAbsent
           ? const Value.absent()
           : Value(notes),
@@ -1419,6 +1457,7 @@ class EvidenceItem extends DataClass implements Insertable<EvidenceItem> {
       filePath: serializer.fromJson<String>(json['filePath']),
       fileHash: serializer.fromJson<String>(json['fileHash']),
       capturedAt: serializer.fromJson<DateTime>(json['capturedAt']),
+      documentDate: serializer.fromJson<DateTime?>(json['documentDate']),
       notes: serializer.fromJson<String?>(json['notes']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -1432,6 +1471,7 @@ class EvidenceItem extends DataClass implements Insertable<EvidenceItem> {
       'filePath': serializer.toJson<String>(filePath),
       'fileHash': serializer.toJson<String>(fileHash),
       'capturedAt': serializer.toJson<DateTime>(capturedAt),
+      'documentDate': serializer.toJson<DateTime?>(documentDate),
       'notes': serializer.toJson<String?>(notes),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -1443,6 +1483,7 @@ class EvidenceItem extends DataClass implements Insertable<EvidenceItem> {
     String? filePath,
     String? fileHash,
     DateTime? capturedAt,
+    Value<DateTime?> documentDate = const Value.absent(),
     Value<String?> notes = const Value.absent(),
     DateTime? createdAt,
   }) => EvidenceItem(
@@ -1451,6 +1492,7 @@ class EvidenceItem extends DataClass implements Insertable<EvidenceItem> {
     filePath: filePath ?? this.filePath,
     fileHash: fileHash ?? this.fileHash,
     capturedAt: capturedAt ?? this.capturedAt,
+    documentDate: documentDate.present ? documentDate.value : this.documentDate,
     notes: notes.present ? notes.value : this.notes,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -1463,6 +1505,9 @@ class EvidenceItem extends DataClass implements Insertable<EvidenceItem> {
       capturedAt: data.capturedAt.present
           ? data.capturedAt.value
           : this.capturedAt,
+      documentDate: data.documentDate.present
+          ? data.documentDate.value
+          : this.documentDate,
       notes: data.notes.present ? data.notes.value : this.notes,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -1476,6 +1521,7 @@ class EvidenceItem extends DataClass implements Insertable<EvidenceItem> {
           ..write('filePath: $filePath, ')
           ..write('fileHash: $fileHash, ')
           ..write('capturedAt: $capturedAt, ')
+          ..write('documentDate: $documentDate, ')
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -1483,8 +1529,16 @@ class EvidenceItem extends DataClass implements Insertable<EvidenceItem> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, type, filePath, fileHash, capturedAt, notes, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    type,
+    filePath,
+    fileHash,
+    capturedAt,
+    documentDate,
+    notes,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1494,6 +1548,7 @@ class EvidenceItem extends DataClass implements Insertable<EvidenceItem> {
           other.filePath == this.filePath &&
           other.fileHash == this.fileHash &&
           other.capturedAt == this.capturedAt &&
+          other.documentDate == this.documentDate &&
           other.notes == this.notes &&
           other.createdAt == this.createdAt);
 }
@@ -1504,6 +1559,7 @@ class EvidenceItemsCompanion extends UpdateCompanion<EvidenceItem> {
   final Value<String> filePath;
   final Value<String> fileHash;
   final Value<DateTime> capturedAt;
+  final Value<DateTime?> documentDate;
   final Value<String?> notes;
   final Value<DateTime> createdAt;
   const EvidenceItemsCompanion({
@@ -1512,6 +1568,7 @@ class EvidenceItemsCompanion extends UpdateCompanion<EvidenceItem> {
     this.filePath = const Value.absent(),
     this.fileHash = const Value.absent(),
     this.capturedAt = const Value.absent(),
+    this.documentDate = const Value.absent(),
     this.notes = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
@@ -1521,6 +1578,7 @@ class EvidenceItemsCompanion extends UpdateCompanion<EvidenceItem> {
     required String filePath,
     required String fileHash,
     required DateTime capturedAt,
+    this.documentDate = const Value.absent(),
     this.notes = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : type = Value(type),
@@ -1533,6 +1591,7 @@ class EvidenceItemsCompanion extends UpdateCompanion<EvidenceItem> {
     Expression<String>? filePath,
     Expression<String>? fileHash,
     Expression<DateTime>? capturedAt,
+    Expression<DateTime>? documentDate,
     Expression<String>? notes,
     Expression<DateTime>? createdAt,
   }) {
@@ -1542,6 +1601,7 @@ class EvidenceItemsCompanion extends UpdateCompanion<EvidenceItem> {
       if (filePath != null) 'file_path': filePath,
       if (fileHash != null) 'file_hash': fileHash,
       if (capturedAt != null) 'captured_at': capturedAt,
+      if (documentDate != null) 'document_date': documentDate,
       if (notes != null) 'notes': notes,
       if (createdAt != null) 'created_at': createdAt,
     });
@@ -1553,6 +1613,7 @@ class EvidenceItemsCompanion extends UpdateCompanion<EvidenceItem> {
     Value<String>? filePath,
     Value<String>? fileHash,
     Value<DateTime>? capturedAt,
+    Value<DateTime?>? documentDate,
     Value<String?>? notes,
     Value<DateTime>? createdAt,
   }) {
@@ -1562,6 +1623,7 @@ class EvidenceItemsCompanion extends UpdateCompanion<EvidenceItem> {
       filePath: filePath ?? this.filePath,
       fileHash: fileHash ?? this.fileHash,
       capturedAt: capturedAt ?? this.capturedAt,
+      documentDate: documentDate ?? this.documentDate,
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -1585,6 +1647,9 @@ class EvidenceItemsCompanion extends UpdateCompanion<EvidenceItem> {
     if (capturedAt.present) {
       map['captured_at'] = Variable<DateTime>(capturedAt.value);
     }
+    if (documentDate.present) {
+      map['document_date'] = Variable<DateTime>(documentDate.value);
+    }
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
@@ -1602,6 +1667,7 @@ class EvidenceItemsCompanion extends UpdateCompanion<EvidenceItem> {
           ..write('filePath: $filePath, ')
           ..write('fileHash: $fileHash, ')
           ..write('capturedAt: $capturedAt, ')
+          ..write('documentDate: $documentDate, ')
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -2560,6 +2626,7 @@ typedef $$EvidenceItemsTableCreateCompanionBuilder =
       required String filePath,
       required String fileHash,
       required DateTime capturedAt,
+      Value<DateTime?> documentDate,
       Value<String?> notes,
       Value<DateTime> createdAt,
     });
@@ -2570,6 +2637,7 @@ typedef $$EvidenceItemsTableUpdateCompanionBuilder =
       Value<String> filePath,
       Value<String> fileHash,
       Value<DateTime> capturedAt,
+      Value<DateTime?> documentDate,
       Value<String?> notes,
       Value<DateTime> createdAt,
     });
@@ -2605,6 +2673,11 @@ class $$EvidenceItemsTableFilterComposer
 
   ColumnFilters<DateTime> get capturedAt => $composableBuilder(
     column: $table.capturedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get documentDate => $composableBuilder(
+    column: $table.documentDate,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2653,6 +2726,11 @@ class $$EvidenceItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get documentDate => $composableBuilder(
+    column: $table.documentDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get notes => $composableBuilder(
     column: $table.notes,
     builder: (column) => ColumnOrderings(column),
@@ -2687,6 +2765,11 @@ class $$EvidenceItemsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get capturedAt => $composableBuilder(
     column: $table.capturedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get documentDate => $composableBuilder(
+    column: $table.documentDate,
     builder: (column) => column,
   );
 
@@ -2733,6 +2816,7 @@ class $$EvidenceItemsTableTableManager
                 Value<String> filePath = const Value.absent(),
                 Value<String> fileHash = const Value.absent(),
                 Value<DateTime> capturedAt = const Value.absent(),
+                Value<DateTime?> documentDate = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => EvidenceItemsCompanion(
@@ -2741,6 +2825,7 @@ class $$EvidenceItemsTableTableManager
                 filePath: filePath,
                 fileHash: fileHash,
                 capturedAt: capturedAt,
+                documentDate: documentDate,
                 notes: notes,
                 createdAt: createdAt,
               ),
@@ -2751,6 +2836,7 @@ class $$EvidenceItemsTableTableManager
                 required String filePath,
                 required String fileHash,
                 required DateTime capturedAt,
+                Value<DateTime?> documentDate = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => EvidenceItemsCompanion.insert(
@@ -2759,6 +2845,7 @@ class $$EvidenceItemsTableTableManager
                 filePath: filePath,
                 fileHash: fileHash,
                 capturedAt: capturedAt,
+                documentDate: documentDate,
                 notes: notes,
                 createdAt: createdAt,
               ),

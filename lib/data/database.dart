@@ -42,6 +42,12 @@ class EvidenceItems extends Table {
   TextColumn get filePath => text()();
   TextColumn get fileHash => text()();
   DateTimeColumn get capturedAt => dateTime()();
+
+  /// The date printed on the document itself (e.g. the date on a block
+  /// notice), read by Gemini the first time it's needed. Differs from
+  /// [capturedAt] for anything added by hand, which is stamped with the
+  /// day the rider added it. Null = not read yet, or unreadable.
+  DateTimeColumn get documentDate => dateTime().nullable()();
   TextColumn get notes => text().nullable()();
   DateTimeColumn get createdAt =>
       dateTime().withDefault(currentDateAndTime)();
@@ -95,7 +101,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -110,6 +116,9 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 4) {
             await m.createTable(letters);
+          }
+          if (from < 5) {
+            await m.addColumn(evidenceItems, evidenceItems.documentDate);
           }
         },
       );
@@ -200,6 +209,10 @@ class AppDatabase extends _$AppDatabase {
           ..orderBy([(e) => OrderingTerm.desc(e.capturedAt)]))
         .watch();
   }
+
+  Future<void> setEvidenceDocumentDate(int id, DateTime date) =>
+      (update(evidenceItems)..where((e) => e.id.equals(id)))
+          .write(EvidenceItemsCompanion(documentDate: Value(date)));
 
   Future<void> deleteEvidence(int id) =>
       (delete(evidenceItems)..where((e) => e.id.equals(id))).go();

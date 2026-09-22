@@ -147,6 +147,87 @@ Rules:
     required List<int> imageBytes,
     required String screenshotHash,
   }) async {
+    final parsed = await _generateWithFallback(
+      prompt: buildPrompt(DateTime.now()),
+      imageBytes: imageBytes,
+      schema: _responseSchema,
+    );
+
+    if (parsed['not_an_order_screen'] == true) {
+      return ParsedOrder(
+        platform: GigPlatform.other,
+        timestamp: DateTime.now(),
+        basePay: 0,
+        sourceScreenshotHash: screenshotHash,
+        parseFailed: true,
+      );
+    }
+
+    return ParsedOrder(
+      platform: GigPlatform.fromKey(parsed['platform'] as String? ?? 'other'),
+      orderRef: parsed['order_ref'] as String?,
+      timestamp:
+          DateTime.tryParse(parsed['timestamp'] as String? ?? '') ??
+          DateTime.now(),
+      basePay: (parsed['base_pay'] as num?)?.toDouble() ?? 0,
+      incentive: (parsed['incentive'] as num?)?.toDouble() ?? 0,
+      tip: (parsed['tip'] as num?)?.toDouble() ?? 0,
+      distanceKm: (parsed['distance_km'] as num?)?.toDouble(),
+      durationMin: (parsed['duration_min'] as num?)?.toInt(),
+      zone: parsed['zone'] as String?,
+      sourceScreenshotHash: screenshotHash,
+    );
+  }
+
+  /// Prompt for [readDocumentDate], anchored to [today] for the same
+  /// missing-year reason as [buildPrompt].
+  @visibleForTesting
+  static String buildDocumentDatePrompt(DateTime today) {
+    final todayIso =
+        '${today.year.toString().padLeft(4, '0')}-'
+        '${today.month.toString().padLeft(2, '0')}-'
+        '${today.day.toString().padLeft(2, '0')}';
+    return '''
+You are reading a screenshot of a notice from an Indian gig-delivery partner app
+(Swiggy, Zomato, Blinkit, Zepto) — usually an account block/suspension/deactivation
+notice. Find the date the notice itself states: the date of the block/suspension if
+one is given, otherwise the date the notice was issued or sent.
+
+Today's date is $todayIso.
+
+Rules:
+- date: ISO 8601 date (YYYY-MM-DD). If the visible date has no year, assume $todayIso's
+  year — but never after $todayIso, so use the year before if needed.
+- Ignore the phone's status-bar clock/date; only use dates that are part of the notice.
+- If no such date is visible, set date to null.
+''';
+  }
+
+  static final _documentDateSchema = {
+    'type': 'OBJECT',
+    'properties': {
+      'date': {'type': 'STRING', 'nullable': true},
+    },
+  };
+
+  /// Reads the date printed on a notice screenshot (e.g. the block date),
+  /// or null when none is visible. Throws like [parseScreenshot] on
+  /// config/network failures.
+  Future<DateTime?> readDocumentDate(List<int> imageBytes) async {
+    final parsed = await _generateWithFallback(
+      prompt: buildDocumentDatePrompt(DateTime.now()),
+      imageBytes: imageBytes,
+      schema: _documentDateSchema,
+    );
+    final date = DateTime.tryParse(parsed['date'] as String? ?? '');
+    return date == null ? null : DateTime(date.year, date.month, date.day);
+  }
+
+  Future<Map<String, dynamic>> _generateWithFallback({
+    required String prompt,
+    required List<int> imageBytes,
+    required Map<String, Object> schema,
+  }) async {
     final apiKey = dotenv.env['GEMINI_API_KEY'];
     if (apiKey == null || apiKey.isEmpty || apiKey == 'your_key_here') {
       throw GeminiNotConfiguredException();
@@ -157,11 +238,12 @@ Rules:
       for (final model in models) {
         if (_dailyQuotaSpent.contains(model)) continue;
         try {
-          return await _parseOnce(
+          return await _generateOnce(
             apiKey: apiKey,
             model: model,
+            prompt: prompt,
             imageBytes: imageBytes,
-            screenshotHash: screenshotHash,
+            schema: schema,
           );
         } on _RetryableGeminiException catch (e) {
           debugPrint('AsliKamai: $model failed, trying next: ${e.message}');
@@ -177,18 +259,19 @@ Rules:
     throw GeminiRequestException(lastError);
   }
 
-  Future<ParsedOrder> _parseOnce({
+  Future<Map<String, dynamic>> _generateOnce({
     required String apiKey,
     required String model,
+    required String prompt,
     required List<int> imageBytes,
-    required String screenshotHash,
+    required Map<String, Object> schema,
   }) async {
     final base64Image = base64Encode(imageBytes);
     final body = jsonEncode({
       'contents': [
         {
           'parts': [
-            {'text': buildPrompt(DateTime.now())},
+            {'text': prompt},
             {
               'inline_data': {
                 'mime_type': mimeTypeFor(imageBytes),
@@ -200,7 +283,7 @@ Rules:
       ],
       'generationConfig': {
         'responseMimeType': 'application/json',
-        'responseSchema': _responseSchema,
+        'responseSchema': schema,
         // No thinkingConfig here: thinkingBudget returns 400
         // INVALID_ARGUMENT with responseSchema on these models, and
         // thinkingLevel "minimal" was no faster (re-measured 2026-09-22).
@@ -257,36 +340,10 @@ Rules:
     if (text == null) {
       throw _RetryableGeminiException('$model returned no text.');
     }
-    final Map<String, dynamic> parsed;
     try {
-      parsed = jsonDecode(text) as Map<String, dynamic>;
+      return jsonDecode(text) as Map<String, dynamic>;
     } on FormatException {
       throw _RetryableGeminiException('$model returned malformed JSON.');
     }
-
-    if (parsed['not_an_order_screen'] == true) {
-      return ParsedOrder(
-        platform: GigPlatform.other,
-        timestamp: DateTime.now(),
-        basePay: 0,
-        sourceScreenshotHash: screenshotHash,
-        parseFailed: true,
-      );
-    }
-
-    return ParsedOrder(
-      platform: GigPlatform.fromKey(parsed['platform'] as String? ?? 'other'),
-      orderRef: parsed['order_ref'] as String?,
-      timestamp:
-          DateTime.tryParse(parsed['timestamp'] as String? ?? '') ??
-          DateTime.now(),
-      basePay: (parsed['base_pay'] as num?)?.toDouble() ?? 0,
-      incentive: (parsed['incentive'] as num?)?.toDouble() ?? 0,
-      tip: (parsed['tip'] as num?)?.toDouble() ?? 0,
-      distanceKm: (parsed['distance_km'] as num?)?.toDouble(),
-      durationMin: (parsed['duration_min'] as num?)?.toInt(),
-      zone: parsed['zone'] as String?,
-      sourceScreenshotHash: screenshotHash,
-    );
   }
 }
