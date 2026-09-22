@@ -49,3 +49,6 @@ app.*.map.json
 
 # Local secrets
 .env
+
+# Claude Code local session artifacts (not project code)
+.claude/

@@ -306,8 +306,6 @@ Each test has a pass mark. **If the first two fail, drop the idea and move to ru
 | Food adulteration checker | A phone can't test food; defamation risk |
 | Transit or AQI app | Where Is My Train, Chalo and Google Maps already cover it |
 | Placement prep, flat marketplace | Unstop, Internshala, NoBroker already cover it |
-| Welfare scheme discovery | **You already have Haqdaar** |
-| SOS / crisis response | **Your friend's Sahay** |
 
 ---
 
