@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/foundation.dart' show debugPrint, visibleForTesting;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
@@ -32,14 +32,26 @@ class _RetryableGeminiException implements Exception {
 /// structured order record. Screenshot bytes are sent for this single
 /// call only and are not persisted anywhere server-side by this app.
 class GeminiVisionService {
-  // The full "flash" model's free tier is capped at 20 requests/DAY, which
-  // this app blew through in a single testing session (confirmed via the
-  // API's RESOURCE_EXHAUSTED/GenerateRequestsPerDayPerProjectPerModel-FreeTier
-  // error). "flash-lite" has a much higher free quota and reads these
-  // screenshots just as accurately — verified directly against a test image.
-  static const _model = 'gemini-3.5-flash-lite';
-  static const _endpoint =
-      'https://generativelanguage.googleapis.com/v1beta/models/$_model:generateContent';
+  // Tried in order; a model that's overloaded (503), rate-limited (429) or
+  // too slow (timeout) hands off to the next one immediately. Measured
+  // 2026-09-22 on the free tier: gemini-3.6-flash read every test
+  // screenshot correctly in 6-11s but still threw the occasional 503;
+  // the flash-lite models were just as accurate but took 20-40s. 3.7/3.8
+  // flash returned 503 on every call, so they aren't in the chain.
+  @visibleForTesting
+  static const models = [
+    'gemini-3.6-flash',
+    'gemini-3.5-flash-lite',
+    'gemini-3.1-flash-lite',
+  ];
+
+  // gemini-3.6-flash's free tier is only 20 requests/day; once a model
+  // reports its per-day quota as spent, stop paying a wasted round-trip
+  // on it for every remaining screenshot this session.
+  static final _dailyQuotaSpent = <String>{};
+
+  static String _endpointFor(String model) =>
+      'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent';
 
   /// Builds the vision prompt anchored to [today] — without this anchor,
   /// Gemini has no way to resolve a screenshot's date when it's shown
@@ -98,7 +110,38 @@ Rules:
     'required': ['platform', 'base_pay', 'incentive', 'tip'],
   };
 
-  static const _maxAttempts = 3;
+  /// Full passes over [models] before giving up.
+  static const _maxRounds = 2;
+
+  // The old 30s cutoff abandoned most flash-lite requests just before
+  // they answered (measured 16-60s per screenshot on 2026-09-22), so
+  // nearly every import came back as "couldn't read". 45s covers
+  // 3.6-flash (6-11s) and the lite fallbacks' typical case; anything
+  // slower hands off to the next model in [models].
+  static const _requestTimeout = Duration(seconds: 45);
+
+  /// Picks the mime type from the file's magic bytes. Android screenshots
+  /// are usually PNG, and image_picker can hand them back untouched, so
+  /// hardcoding image/jpeg mislabels most real inputs.
+  @visibleForTesting
+  static String mimeTypeFor(List<int> bytes) {
+    if (bytes.length >= 4 &&
+        bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4E &&
+        bytes[3] == 0x47) {
+      return 'image/png';
+    }
+    if (bytes.length >= 12 &&
+        bytes[0] == 0x52 && // RIFF....WEBP
+        bytes[8] == 0x57 &&
+        bytes[9] == 0x45 &&
+        bytes[10] == 0x42 &&
+        bytes[11] == 0x50) {
+      return 'image/webp';
+    }
+    return 'image/jpeg';
+  }
 
   Future<ParsedOrder> parseScreenshot({
     required List<int> imageBytes,
@@ -109,29 +152,34 @@ Rules:
       throw GeminiNotConfiguredException();
     }
 
-    for (var attempt = 1; attempt <= _maxAttempts; attempt++) {
-      try {
-        return await _parseOnce(
-          apiKey: apiKey,
-          imageBytes: imageBytes,
-          screenshotHash: screenshotHash,
-        );
-      } on _RetryableGeminiException catch (e) {
-        if (attempt == _maxAttempts) {
-          throw GeminiRequestException(e.message);
+    var lastError = 'Gemini unavailable.';
+    for (var round = 1; round <= _maxRounds; round++) {
+      for (final model in models) {
+        if (_dailyQuotaSpent.contains(model)) continue;
+        try {
+          return await _parseOnce(
+            apiKey: apiKey,
+            model: model,
+            imageBytes: imageBytes,
+            screenshotHash: screenshotHash,
+          );
+        } on _RetryableGeminiException catch (e) {
+          debugPrint('AsliKamai: $model failed, trying next: ${e.message}');
+          lastError = e.message;
         }
-        // Transient (timeout / network blip / rate limit / server
-        // overloaded) — exponential backoff (2s, 4s) gives rate limits a
-        // real chance to clear instead of immediately re-hitting them.
-        await Future<void>.delayed(Duration(seconds: 1 << attempt));
+      }
+      if (round < _maxRounds) {
+        // Every model was busy — give the demand spike a moment to clear
+        // before one more full pass.
+        await Future<void>.delayed(const Duration(seconds: 3));
       }
     }
-    // Unreachable: the loop above always returns or throws.
-    throw GeminiRequestException('Exhausted retries.');
+    throw GeminiRequestException(lastError);
   }
 
   Future<ParsedOrder> _parseOnce({
     required String apiKey,
+    required String model,
     required List<int> imageBytes,
     required String screenshotHash,
   }) async {
@@ -142,7 +190,10 @@ Rules:
           'parts': [
             {'text': buildPrompt(DateTime.now())},
             {
-              'inline_data': {'mime_type': 'image/jpeg', 'data': base64Image},
+              'inline_data': {
+                'mime_type': mimeTypeFor(imageBytes),
+                'data': base64Image,
+              },
             },
           ],
         },
@@ -150,10 +201,9 @@ Rules:
       'generationConfig': {
         'responseMimeType': 'application/json',
         'responseSchema': _responseSchema,
-        // No thinkingConfig here: gemini-3.5-flash-lite returns 400
-        // INVALID_ARGUMENT when thinkingConfig is combined with
-        // responseSchema (verified directly), and this model doesn't
-        // produce hidden "thinking" tokens by default anyway.
+        // No thinkingConfig here: thinkingBudget returns 400
+        // INVALID_ARGUMENT with responseSchema on these models, and
+        // thinkingLevel "minimal" was no faster (re-measured 2026-09-22).
       },
     });
 
@@ -161,16 +211,23 @@ Rules:
     try {
       response = await http
           .post(
-            Uri.parse('$_endpoint?key=$apiKey'),
+            Uri.parse('${_endpointFor(model)}?key=$apiKey'),
             headers: {'Content-Type': 'application/json'},
             body: body,
           )
-          .timeout(const Duration(seconds: 30));
+          .timeout(_requestTimeout);
     } catch (e) {
       throw _RetryableGeminiException('Could not reach Gemini: $e');
     }
 
-    if (response.statusCode == 429 || response.statusCode >= 500) {
+    if (response.statusCode == 429 && response.body.contains('PerDay')) {
+      _dailyQuotaSpent.add(model);
+    }
+    // 404 = model retired for this key (2.5-flash-lite went this way) —
+    // fall through to the next model rather than failing the import.
+    if (response.statusCode == 429 ||
+        response.statusCode == 404 ||
+        response.statusCode >= 500) {
       throw _RetryableGeminiException(
         'Gemini returned ${response.statusCode}: ${response.body}',
       );
@@ -188,8 +245,24 @@ Rules:
       throw GeminiRequestException('Gemini returned no candidates.');
     }
 
-    final text = candidates[0]['content']['parts'][0]['text'] as String;
-    final parsed = jsonDecode(text) as Map<String, dynamic>;
+    // Thinking models can return more than one part; the answer is the
+    // non-thought part carrying text.
+    final parts =
+        (candidates[0]['content']?['parts'] as List<dynamic>? ?? const [])
+            .cast<Map<String, dynamic>>();
+    final text = parts
+        .where((p) => p['thought'] != true && p['text'] is String)
+        .map((p) => p['text'] as String)
+        .firstOrNull;
+    if (text == null) {
+      throw _RetryableGeminiException('$model returned no text.');
+    }
+    final Map<String, dynamic> parsed;
+    try {
+      parsed = jsonDecode(text) as Map<String, dynamic>;
+    } on FormatException {
+      throw _RetryableGeminiException('$model returned malformed JSON.');
+    }
 
     if (parsed['not_an_order_screen'] == true) {
       return ParsedOrder(
@@ -204,7 +277,8 @@ Rules:
     return ParsedOrder(
       platform: GigPlatform.fromKey(parsed['platform'] as String? ?? 'other'),
       orderRef: parsed['order_ref'] as String?,
-      timestamp: DateTime.tryParse(parsed['timestamp'] as String? ?? '') ??
+      timestamp:
+          DateTime.tryParse(parsed['timestamp'] as String? ?? '') ??
           DateTime.now(),
       basePay: (parsed['base_pay'] as num?)?.toDouble() ?? 0,
       incentive: (parsed['incentive'] as num?)?.toDouble() ?? 0,

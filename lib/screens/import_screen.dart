@@ -59,44 +59,59 @@ class _ImportScreenState extends State<ImportScreen> {
       _errorMessage = null;
     });
 
-    final results = <ParsedOrder>[];
-    for (final file in files) {
-      try {
-        final bytes = await File(file.path).readAsBytes();
-        final hash = hashImageBytes(bytes);
-        final screenshotPath = await saveScreenshot(bytes: bytes, hash: hash);
-        final parsed = await _gemini.parseScreenshot(
-          imageBytes: bytes,
-          screenshotHash: hash,
-        );
-        parsed.screenshotPath = screenshotPath;
-        results.add(parsed);
-      } on GeminiNotConfiguredException {
-        if (!mounted) return;
-        setState(() {
-          _status = _ImportStatus.error;
-          _errorMessage = S(context).screenshotReadingNotSetUp;
-        });
-        return;
-      } catch (e) {
-        debugPrint('AsliKamai: screenshot parse failed: $e');
-        results.add(ParsedOrder(
-          platform: GigPlatform.other,
-          timestamp: DateTime.now(),
-          basePay: 0,
-          parseFailed: true,
-        ));
+    // Each Gemini call can take 20-60s on the free tier, so reading a
+    // week's screenshots one at a time could take many minutes. A few
+    // workers run in parallel; results keep the picked order.
+    final results = List<ParsedOrder?>.filled(files.length, null);
+    var notConfigured = false;
+    var next = 0;
+
+    Future<void> worker() async {
+      while (!notConfigured && next < files.length) {
+        final i = next++;
+        try {
+          final bytes = await File(files[i].path).readAsBytes();
+          final hash = hashImageBytes(bytes);
+          final screenshotPath = await saveScreenshot(bytes: bytes, hash: hash);
+          final parsed = await _gemini.parseScreenshot(
+            imageBytes: bytes,
+            screenshotHash: hash,
+          );
+          parsed.screenshotPath = screenshotPath;
+          results[i] = parsed;
+        } on GeminiNotConfiguredException {
+          notConfigured = true;
+          return;
+        } catch (e) {
+          debugPrint('AsliKamai: screenshot parse failed: $e');
+          results[i] = ParsedOrder(
+            platform: GigPlatform.other,
+            timestamp: DateTime.now(),
+            basePay: 0,
+            parseFailed: true,
+          );
+        }
+        if (mounted) setState(() => _parsedCount++);
       }
-      if (!mounted) return;
-      setState(() => _parsedCount++);
     }
 
+    await Future.wait(List.generate(3, (_) => worker()));
+
     if (!mounted) return;
+    if (notConfigured) {
+      setState(() {
+        _status = _ImportStatus.error;
+        _errorMessage = S(context).screenshotReadingNotSetUp;
+      });
+      return;
+    }
     setState(() => _status = _ImportStatus.idle);
 
     final savedCount = await Navigator.of(context).push<int>(
       MaterialPageRoute(
-        builder: (_) => ImportReviewScreen(parsedOrders: results),
+        builder: (_) => ImportReviewScreen(
+          parsedOrders: results.whereType<ParsedOrder>().toList(),
+        ),
       ),
     );
 

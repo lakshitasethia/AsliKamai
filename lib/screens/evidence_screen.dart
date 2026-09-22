@@ -44,7 +44,10 @@ class _EvidenceScreenState extends State<EvidenceScreen>
   Future<void> _addDocuments() async {
     List<XFile> files;
     try {
-      files = await _picker.pickMultiImage(imageQuality: 85);
+      // No imageQuality: that re-encodes to a lossy JPEG, so the stored
+      // SHA-256 could never be matched against the rider's original file —
+      // useless as tamper-evident proof in a dispute.
+      files = await _picker.pickMultiImage();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

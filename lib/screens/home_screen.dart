@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:drift/drift.dart' show TableUpdateQuery;
 import 'package:flutter/material.dart';
 
 import '../data/database.dart';
@@ -17,6 +18,7 @@ import '../widgets/app_card.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/section_header.dart';
 import 'rate_cut_details_screen.dart';
+import 'settings_screen.dart';
 
 /// Weekly Dashboard tab (mockup screen 3): the "3-second glance" home
 /// screen — net earnings, ₹/hr, ₹/km, best/worst hour and zone, and
@@ -32,6 +34,32 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   WeekRange _week = WeekRange(DateTime.now());
   late Future<WeeklyDashboardData> _dataFuture = _load();
+
+  // Home stays alive in the tab stack, so without this a fresh import or a
+  // cost logged on the Costs tab never reached the dashboard until the
+  // rider changed weeks or pulled to refresh (the alert card above already
+  // watched its own stream, so it updated while the numbers didn't).
+  late final StreamSubscription<void> _dbChanges;
+
+  @override
+  void initState() {
+    super.initState();
+    final db = AppDatabase.instance;
+    _dbChanges = db
+        .tableUpdates(TableUpdateQuery.onAllTables([db.orders, db.expenses]))
+        .listen((_) {
+      if (!mounted) return;
+      setState(() {
+        _dataFuture = _load();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _dbChanges.cancel();
+    super.dispose();
+  }
 
   Future<WeeklyDashboardData> _load() async {
     final db = AppDatabase.instance;
@@ -57,13 +85,19 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const _AppTitle(),
-        actions: const [
-          _OfflinePill(),
-          SizedBox(width: 4),
-          Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: Icon(Icons.settings_outlined, color: AppColors.charcoal),
+        actions: [
+          const _OfflinePill(),
+          IconButton(
+            tooltip: S(context).profile,
+            icon: const Icon(
+              Icons.settings_outlined,
+              color: AppColors.charcoal,
+            ),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            ),
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: RefreshIndicator(
