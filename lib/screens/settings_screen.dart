@@ -62,52 +62,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final s = S(context);
     return Scaffold(
       appBar: AppBar(title: ScreenTitle(s.profile)),
-      body: _loading
-          ? const SizedBox.shrink()
-          : ListView(
-              padding: const EdgeInsets.all(AppSpacing.screenPadding),
-              children: [
-                TextField(
-                  controller: _nameController,
-                  decoration: InputDecoration(labelText: s.yourName),
-                  textCapitalization: TextCapitalization.words,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                Text(s.platformsYouWork, style: AppTextStyles.label),
-                const SizedBox(height: AppSpacing.xs),
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.xs,
-                  children: [
-                    for (final platform in GigPlatform.values)
-                      if (platform != GigPlatform.other)
-                        FilterChip(
-                          label: Text(platform.label),
-                          avatar: Icon(platform.icon, size: 18, color: platform.color),
-                          selected: _platforms.contains(platform),
-                          onSelected: (selected) => setState(() {
-                            if (selected) {
-                              _platforms.add(platform);
-                            } else {
-                              _platforms.remove(platform);
-                            }
-                          }),
-                        ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                ElevatedButton(
-                  onPressed: _saving ? null : _save,
-                  child: _saving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(s.save),
-                ),
-              ],
-            ),
+      body: SafeArea(
+        // Pushed routes sit outside RootShell's SafeArea; without this,
+        // Android 15+ edge-to-edge draws the bottom under the nav bar.
+        top: false,
+        child: _loading
+            ? const SizedBox.shrink()
+            : ListView(
+                padding: const EdgeInsets.all(AppSpacing.screenPadding),
+                children: [
+                  TextField(
+                    controller: _nameController,
+                    decoration: InputDecoration(labelText: s.yourName),
+                    textCapitalization: TextCapitalization.words,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Text(s.platformsYouWork, style: AppTextStyles.label),
+                  const SizedBox(height: AppSpacing.xs),
+                  Wrap(
+                    spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.xs,
+                    children: [
+                      for (final platform in GigPlatform.values)
+                        if (platform != GigPlatform.other)
+                          FilterChip(
+                            label: Text(platform.label),
+                            avatar: Icon(platform.icon, size: 18, color: platform.color),
+                            selected: _platforms.contains(platform),
+                            onSelected: (selected) => setState(() {
+                              if (selected) {
+                                _platforms.add(platform);
+                              } else {
+                                _platforms.remove(platform);
+                              }
+                            }),
+                          ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  ElevatedButton(
+                    onPressed: _saving ? null : _save,
+                    child: _saving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(s.save),
+                  ),
+                ],
+              ),
+      ),
     );
   }
 }

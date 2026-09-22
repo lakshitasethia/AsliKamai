@@ -68,59 +68,64 @@ class _ShareCardScreenState extends State<ShareCardScreen> {
     final s = S(context);
     return Scaffold(
       appBar: AppBar(title: ScreenTitle(s.shareCard)),
-      body: FutureBuilder<WeeklyDashboardData>(
-        future: _dataFuture,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return const SizedBox.shrink();
-          final data = snapshot.data!;
-          if (data.isEmpty) {
-            return EmptyState(
-              icon: Icons.share_outlined,
-              title: s.nothingToShareYet,
-              message: s.importScreenshotsFirst,
-            );
-          }
-          return ListView(
-            padding: const EdgeInsets.all(AppSpacing.screenPadding),
-            children: [
-              Center(
-                child: RepaintBoundary(
-                  key: _boundaryKey,
-                  child: _ShareCard(
-                    data: data,
-                    week: _week,
-                    riderName: _includeName ? _riderName : null,
+      body: SafeArea(
+        // Pushed routes sit outside RootShell's SafeArea; without this,
+        // Android 15+ edge-to-edge draws the bottom under the nav bar.
+        top: false,
+        child: FutureBuilder<WeeklyDashboardData>(
+          future: _dataFuture,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) return const SizedBox.shrink();
+            final data = snapshot.data!;
+            if (data.isEmpty) {
+              return EmptyState(
+                icon: Icons.share_outlined,
+                title: s.nothingToShareYet,
+                message: s.importScreenshotsFirst,
+              );
+            }
+            return ListView(
+              padding: const EdgeInsets.all(AppSpacing.screenPadding),
+              children: [
+                Center(
+                  child: RepaintBoundary(
+                    key: _boundaryKey,
+                    child: _ShareCard(
+                      data: data,
+                      week: _week,
+                      riderName: _includeName ? _riderName : null,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(s.includeMyName),
-                subtitle: Text(
-                  _riderName.isEmpty ? s.setYourNameHint : s.includeMyNameOff,
-                  style: AppTextStyles.bodyMuted,
+                const SizedBox(height: AppSpacing.md),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(s.includeMyName),
+                  subtitle: Text(
+                    _riderName.isEmpty ? s.setYourNameHint : s.includeMyNameOff,
+                    style: AppTextStyles.bodyMuted,
+                  ),
+                  value: _includeName && _riderName.isNotEmpty,
+                  onChanged: _riderName.isEmpty
+                      ? null
+                      : (v) => setState(() => _includeName = v),
                 ),
-                value: _includeName && _riderName.isNotEmpty,
-                onChanged: _riderName.isEmpty
-                    ? null
-                    : (v) => setState(() => _includeName = v),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              ElevatedButton.icon(
-                onPressed: _sharing ? null : () => _share(data),
-                icon: _sharing
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.white),
-                      )
-                    : const Icon(Icons.share_outlined),
-                label: Text(_sharing ? s.preparingEllipsis : s.shareButton),
-              ),
-            ],
-          );
-        },
+                const SizedBox(height: AppSpacing.md),
+                ElevatedButton.icon(
+                  onPressed: _sharing ? null : () => _share(data),
+                  icon: _sharing
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.white),
+                        )
+                      : const Icon(Icons.share_outlined),
+                  label: Text(_sharing ? s.preparingEllipsis : s.shareButton),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

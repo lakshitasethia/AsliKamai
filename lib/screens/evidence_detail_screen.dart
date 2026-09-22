@@ -67,35 +67,40 @@ class EvidenceDetailScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.screenPadding),
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
-            child: Image.file(File(item.filePath)),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(S(context).captured, style: AppTextStyles.label),
-                Text(formatRelativeDate(item.capturedAt), style: AppTextStyles.body),
-                if (item.notes != null && item.notes!.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(S(context).notes, style: AppTextStyles.label),
-                  Text(item.notes!, style: AppTextStyles.body),
-                ],
-                const SizedBox(height: AppSpacing.sm),
-                Text(S(context).shaProofOfIntegrity, style: AppTextStyles.label),
-                SelectableText(
-                  item.fileHash,
-                  style: AppTextStyles.bodyMuted.copyWith(fontFamily: 'monospace'),
-                ),
-              ],
+      body: SafeArea(
+        // Pushed routes sit outside RootShell's SafeArea; without this,
+        // Android 15+ edge-to-edge draws the bottom under the nav bar.
+        top: false,
+        child: ListView(
+          padding: const EdgeInsets.all(AppSpacing.screenPadding),
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
+              child: Image.file(File(item.filePath)),
             ),
-          ),
-        ],
+            const SizedBox(height: AppSpacing.md),
+            AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(S(context).captured, style: AppTextStyles.label),
+                  Text(formatRelativeDate(item.capturedAt), style: AppTextStyles.body),
+                  if (item.notes != null && item.notes!.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(S(context).notes, style: AppTextStyles.label),
+                    Text(item.notes!, style: AppTextStyles.body),
+                  ],
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(S(context).shaProofOfIntegrity, style: AppTextStyles.label),
+                  SelectableText(
+                    item.fileHash,
+                    style: AppTextStyles.bodyMuted.copyWith(fontFamily: 'monospace'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

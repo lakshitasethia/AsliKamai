@@ -26,71 +26,76 @@ class RateCutDetailsScreen extends StatelessWidget {
     final s = S(context);
     return Scaffold(
       appBar: AppBar(title: ScreenTitle(s.rateCutAlertTitle)),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.screenPadding),
-        children: [
-          Row(
-            children: [
-              Icon(platform.icon, color: platform.color),
-              const SizedBox(width: AppSpacing.sm),
-              Text(platform.label, style: AppTextStyles.screenTitle),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          AppCard(
-            child: Row(
+      body: SafeArea(
+        // Pushed routes sit outside RootShell's SafeArea; without this,
+        // Android 15+ edge-to-edge draws the bottom under the nav bar.
+        top: false,
+        child: ListView(
+          padding: const EdgeInsets.all(AppSpacing.screenPadding),
+          children: [
+            Row(
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(s.lastWeek, style: AppTextStyles.label),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        '${formatRupees(alert.lastWeekRatePerKm)}/km',
-                        style: AppTextStyles.statNumber,
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.arrow_forward_rounded, color: AppColors.mutedGrey),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(s.thisWeek, style: AppTextStyles.label),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        '${formatRupees(alert.thisWeekRatePerKm)}/km',
-                        style: AppTextStyles.statNumber
-                            .copyWith(color: AppColors.redAlert),
-                      ),
-                    ],
-                  ),
-                ),
+                Icon(platform.icon, color: platform.color),
+                const SizedBox(width: AppSpacing.sm),
+                Text(platform.label, style: AppTextStyles.screenTitle),
               ],
             ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            s.rateDropSummary(alert.dropPercent.toStringAsFixed(0), platform.label),
-            style: AppTextStyles.body,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Text(s.evidenceThisWeeksOrders, style: AppTextStyles.sectionHeader),
-          const SizedBox(height: AppSpacing.sm),
-          AppCard(
-            padding: EdgeInsets.zero,
-            child: Column(
-              children: [
-                for (var i = 0; i < alert.evidenceOrders.length; i++) ...[
-                  if (i > 0) const Divider(height: 1, color: AppColors.cardBorder),
-                  _EvidenceTile(order: alert.evidenceOrders[i]),
+            const SizedBox(height: AppSpacing.md),
+            AppCard(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(s.lastWeek, style: AppTextStyles.label),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          '${formatRupees(alert.lastWeekRatePerKm)}/km',
+                          style: AppTextStyles.statNumber,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.arrow_forward_rounded, color: AppColors.mutedGrey),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(s.thisWeek, style: AppTextStyles.label),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          '${formatRupees(alert.thisWeekRatePerKm)}/km',
+                          style: AppTextStyles.statNumber
+                              .copyWith(color: AppColors.redAlert),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              s.rateDropSummary(alert.dropPercent.toStringAsFixed(0), platform.label),
+              style: AppTextStyles.body,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(s.evidenceThisWeeksOrders, style: AppTextStyles.sectionHeader),
+            const SizedBox(height: AppSpacing.sm),
+            AppCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  for (var i = 0; i < alert.evidenceOrders.length; i++) ...[
+                    if (i > 0) const Divider(height: 1, color: AppColors.cardBorder),
+                    _EvidenceTile(order: alert.evidenceOrders[i]),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

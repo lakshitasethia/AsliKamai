@@ -81,6 +81,7 @@ class _LetterFormScreenState extends State<LetterFormScreen> {
     final picked = await showModalBottomSheet<Order>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: AppColors.cream,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -105,6 +106,7 @@ class _LetterFormScreenState extends State<LetterFormScreen> {
     final picked = await showModalBottomSheet<EvidenceItem>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: AppColors.cream,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -198,65 +200,70 @@ class _LetterFormScreenState extends State<LetterFormScreen> {
     final s = S(context);
     return Scaffold(
       appBar: AppBar(title: ScreenTitle(s.letterTemplateLabel(widget.type.name))),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.screenPadding),
-        children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.redAlert.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
-              border: Border.all(color: AppColors.redAlert.withValues(alpha: 0.3)),
+      body: SafeArea(
+        // Pushed routes sit outside RootShell's SafeArea; without this,
+        // Android 15+ edge-to-edge draws the bottom under the nav bar.
+        top: false,
+        child: ListView(
+          padding: const EdgeInsets.all(AppSpacing.screenPadding),
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.redAlert.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
+                border: Border.all(color: AppColors.redAlert.withValues(alpha: 0.3)),
+              ),
+              child: Text(
+                s.letterFormNotLegalAdvice,
+                style: AppTextStyles.body,
+              ),
             ),
-            child: Text(
-              s.letterFormNotLegalAdvice,
-              style: AppTextStyles.body,
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: _nameController,
+              decoration: InputDecoration(labelText: s.yourName),
+              onChanged: (_) => setState(() {}),
             ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          TextField(
-            controller: _nameController,
-            decoration: InputDecoration(labelText: s.yourName),
-            onChanged: (_) => setState(() {}),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          DropdownButtonFormField<GigPlatform>(
-            initialValue: _platform,
-            decoration: InputDecoration(labelText: s.platformLabel),
-            items: GigPlatform.values
-                .where((p) => p != GigPlatform.other)
-                .map((p) => DropdownMenuItem(value: p, child: Text(p.label)))
-                .toList(),
-            onChanged: (v) => setState(() => _platform = v ?? _platform),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(s.language, style: AppTextStyles.label),
-          const SizedBox(height: AppSpacing.xs),
-          Wrap(
-            spacing: AppSpacing.sm,
-            children: [
-              for (final lang in LetterLanguage.selectable)
-                ChoiceChip(
-                  label: Text(lang.label),
-                  selected: _lang == lang,
-                  onSelected: (_) => setState(() => _lang = lang),
-                ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          ..._templateFields(s),
-          const SizedBox(height: AppSpacing.lg),
-          ElevatedButton(
-            onPressed: _isValid && !_generating ? _generate : null,
-            child: _generating
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.white),
-                  )
-                : Text(s.generateAndPreview),
-          ),
-        ],
+            const SizedBox(height: AppSpacing.sm),
+            DropdownButtonFormField<GigPlatform>(
+              initialValue: _platform,
+              decoration: InputDecoration(labelText: s.platformLabel),
+              items: GigPlatform.values
+                  .where((p) => p != GigPlatform.other)
+                  .map((p) => DropdownMenuItem(value: p, child: Text(p.label)))
+                  .toList(),
+              onChanged: (v) => setState(() => _platform = v ?? _platform),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(s.language, style: AppTextStyles.label),
+            const SizedBox(height: AppSpacing.xs),
+            Wrap(
+              spacing: AppSpacing.sm,
+              children: [
+                for (final lang in LetterLanguage.selectable)
+                  ChoiceChip(
+                    label: Text(lang.label),
+                    selected: _lang == lang,
+                    onSelected: (_) => setState(() => _lang = lang),
+                  ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            ..._templateFields(s),
+            const SizedBox(height: AppSpacing.lg),
+            ElevatedButton(
+              onPressed: _isValid && !_generating ? _generate : null,
+              child: _generating
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.white),
+                    )
+                  : Text(s.generateAndPreview),
+            ),
+          ],
+        ),
       ),
     );
   }

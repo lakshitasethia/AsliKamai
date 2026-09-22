@@ -26,60 +26,65 @@ class LetterGeneratorScreen extends StatelessWidget {
     final s = S(context);
     return Scaffold(
       appBar: AppBar(title: ScreenTitle(s.letterGeneratorTitle)),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.screenPadding),
-        children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.redAlert.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
-              border: Border.all(color: AppColors.redAlert.withValues(alpha: 0.3)),
+      body: SafeArea(
+        // Pushed routes sit outside RootShell's SafeArea; without this,
+        // Android 15+ edge-to-edge draws the bottom under the nav bar.
+        top: false,
+        child: ListView(
+          padding: const EdgeInsets.all(AppSpacing.screenPadding),
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.redAlert.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
+                border: Border.all(color: AppColors.redAlert.withValues(alpha: 0.3)),
+              ),
+              child: Text(
+                s.notLegalAdviceBanner,
+                style: AppTextStyles.body,
+              ),
             ),
-            child: Text(
-              s.notLegalAdviceBanner,
-              style: AppTextStyles.body,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          SectionHeader(s.templates),
-          AppCard(
-            padding: EdgeInsets.zero,
-            child: Column(
-              children: [
-                for (var i = 0; i < LetterTemplateType.values.length; i++) ...[
-                  if (i > 0) const Divider(height: 1, color: AppColors.cardBorder),
-                  _TemplateTile(type: LetterTemplateType.values[i]),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          SectionHeader(s.history),
-          StreamBuilder<List<Letter>>(
-            stream: AppDatabase.instance.watchAllLetters(),
-            builder: (context, snapshot) {
-              final letters = snapshot.data ?? [];
-              if (letters.isEmpty) {
-                return Text(
-                  s.noLettersYet,
-                  style: AppTextStyles.bodyMuted,
-                );
-              }
-              return AppCard(
-                padding: EdgeInsets.zero,
-                child: Column(
-                  children: [
-                    for (var i = 0; i < letters.length; i++) ...[
-                      if (i > 0) const Divider(height: 1, color: AppColors.cardBorder),
-                      _LetterHistoryTile(letter: letters[i]),
-                    ],
+            const SizedBox(height: AppSpacing.md),
+            SectionHeader(s.templates),
+            AppCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  for (var i = 0; i < LetterTemplateType.values.length; i++) ...[
+                    if (i > 0) const Divider(height: 1, color: AppColors.cardBorder),
+                    _TemplateTile(type: LetterTemplateType.values[i]),
                   ],
-                ),
-              );
-            },
-          ),
-        ],
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            SectionHeader(s.history),
+            StreamBuilder<List<Letter>>(
+              stream: AppDatabase.instance.watchAllLetters(),
+              builder: (context, snapshot) {
+                final letters = snapshot.data ?? [];
+                if (letters.isEmpty) {
+                  return Text(
+                    s.noLettersYet,
+                    style: AppTextStyles.bodyMuted,
+                  );
+                }
+                return AppCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      for (var i = 0; i < letters.length; i++) ...[
+                        if (i > 0) const Divider(height: 1, color: AppColors.cardBorder),
+                        _LetterHistoryTile(letter: letters[i]),
+                      ],
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

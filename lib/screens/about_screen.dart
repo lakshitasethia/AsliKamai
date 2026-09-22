@@ -19,38 +19,43 @@ class AboutScreen extends StatelessWidget {
     final s = S(context);
     return Scaffold(
       appBar: AppBar(title: ScreenTitle(s.privacyAboutAsliKamai)),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.screenPadding),
-        children: [
-          Text('AsliKamai', style: AppTextStyles.screenTitle),
-          const SizedBox(height: AppSpacing.xs),
-          FutureBuilder<PackageInfo>(
-            future: PackageInfo.fromPlatform(),
-            builder: (context, snapshot) {
-              final version = snapshot.data;
-              return Text(
-                version == null
-                    ? ' '
-                    : 'Version ${version.version} (${version.buildNumber})',
-                style: AppTextStyles.bodyMuted,
-              );
-            },
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Text(s.aboutIntro, style: AppTextStyles.body),
-          const SizedBox(height: AppSpacing.md),
-          Text(s.aboutDataStaysHeader, style: AppTextStyles.sectionHeader),
-          const SizedBox(height: AppSpacing.xs),
-          Text(s.aboutDataStaysBody, style: AppTextStyles.body),
-          const SizedBox(height: AppSpacing.md),
-          Text(s.aboutYouControlHeader, style: AppTextStyles.sectionHeader),
-          const SizedBox(height: AppSpacing.xs),
-          Text(s.aboutYouControlBody, style: AppTextStyles.body),
-          const SizedBox(height: AppSpacing.md),
-          Text(s.aboutNotLegalHeader, style: AppTextStyles.sectionHeader),
-          const SizedBox(height: AppSpacing.xs),
-          Text(s.aboutNotLegalBody, style: AppTextStyles.body),
-        ],
+      body: SafeArea(
+        // Pushed routes sit outside RootShell's SafeArea; without this,
+        // Android 15+ edge-to-edge draws the bottom under the nav bar.
+        top: false,
+        child: ListView(
+          padding: const EdgeInsets.all(AppSpacing.screenPadding),
+          children: [
+            Text('AsliKamai', style: AppTextStyles.screenTitle),
+            const SizedBox(height: AppSpacing.xs),
+            FutureBuilder<PackageInfo>(
+              future: PackageInfo.fromPlatform(),
+              builder: (context, snapshot) {
+                final version = snapshot.data;
+                return Text(
+                  version == null
+                      ? ' '
+                      : 'Version ${version.version} (${version.buildNumber})',
+                  style: AppTextStyles.bodyMuted,
+                );
+              },
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(s.aboutIntro, style: AppTextStyles.body),
+            const SizedBox(height: AppSpacing.md),
+            Text(s.aboutDataStaysHeader, style: AppTextStyles.sectionHeader),
+            const SizedBox(height: AppSpacing.xs),
+            Text(s.aboutDataStaysBody, style: AppTextStyles.body),
+            const SizedBox(height: AppSpacing.md),
+            Text(s.aboutYouControlHeader, style: AppTextStyles.sectionHeader),
+            const SizedBox(height: AppSpacing.xs),
+            Text(s.aboutYouControlBody, style: AppTextStyles.body),
+            const SizedBox(height: AppSpacing.md),
+            Text(s.aboutNotLegalHeader, style: AppTextStyles.sectionHeader),
+            const SizedBox(height: AppSpacing.xs),
+            Text(s.aboutNotLegalBody, style: AppTextStyles.body),
+          ],
+        ),
       ),
     );
   }
