@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/drift.dart' show TableUpdateQuery;
 import 'package:flutter/material.dart';
 
@@ -611,29 +612,59 @@ class _AppTitle extends StatelessWidget {
   }
 }
 
-class _OfflinePill extends StatelessWidget {
+/// Online/Offline indicator. Reflects whether the phone has any network
+/// link (Wi-Fi, mobile data, ethernet) — not whether Gemini is reachable —
+/// so the rider knows if screenshot import can work right now.
+class _OfflinePill extends StatefulWidget {
   const _OfflinePill();
 
   @override
+  State<_OfflinePill> createState() => _OfflinePillState();
+}
+
+class _OfflinePillState extends State<_OfflinePill> {
+  final _connectivity = Connectivity();
+  StreamSubscription<List<ConnectivityResult>>? _sub;
+  bool? _online;
+
+  @override
+  void initState() {
+    super.initState();
+    _connectivity.checkConnectivity().then(_update, onError: (_) {});
+    _sub = _connectivity.onConnectivityChanged.listen(_update, onError: (_) {});
+  }
+
+  void _update(List<ConnectivityResult> results) {
+    if (!mounted) return;
+    setState(() {
+      _online = results.any((r) => r != ConnectivityResult.none);
+    });
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Unknown until the first check lands; show nothing rather than guess.
+    final online = _online;
+    if (online == null) return const SizedBox.shrink();
+    final color = online ? AppColors.successGreen : AppColors.mutedGrey;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 8,
           height: 8,
-          decoration: const BoxDecoration(
-            color: AppColors.mutedGrey,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 4),
         Text(
-          S(context).offline,
-          style: Theme.of(context)
-              .textTheme
-              .bodySmall
-              ?.copyWith(color: AppColors.mutedGrey),
+          online ? S(context).online : S(context).offline,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: color),
         ),
       ],
     );

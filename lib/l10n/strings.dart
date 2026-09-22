@@ -42,6 +42,7 @@ class Strings {
 
   // Home tab (home_screen.dart)
   String get offline => _t('Offline', 'ऑफ़लाइन', 'ಆಫ್‌ಲೈನ್');
+  String get online => _t('Online', 'ऑनलाइन', 'ಆನ್‌ಲೈನ್');
   String get noDataYet => _t('No data yet', 'अभी कोई डेटा नहीं', 'ಇನ್ನೂ ಡೇಟಾ ಇಲ್ಲ');
   String get importScreenshotsPrompt => _t(
         'Import screenshots to see your weekly summary.',
