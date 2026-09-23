@@ -84,7 +84,7 @@ class EvidenceDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(S(context).captured, style: AppTextStyles.label),
-                  Text(formatRelativeDate(item.capturedAt), style: AppTextStyles.body),
+                  Text(formatRelativeDate(item.capturedAt, S(context)), style: AppTextStyles.body),
                   if (item.notes != null && item.notes!.isNotEmpty) ...[
                     const SizedBox(height: AppSpacing.sm),
                     Text(S(context).notes, style: AppTextStyles.label),

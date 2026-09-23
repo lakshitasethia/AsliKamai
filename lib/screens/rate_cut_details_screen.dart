@@ -121,7 +121,7 @@ class _EvidenceTile extends StatelessWidget {
         style: AppTextStyles.body,
       ),
       subtitle: Text(
-        formatRelativeDate(order.timestamp),
+        formatRelativeDate(order.timestamp, S(context)),
         style: AppTextStyles.bodyMuted,
       ),
       trailing: ratePerKm == null

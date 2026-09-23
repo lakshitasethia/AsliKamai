@@ -374,6 +374,10 @@ class Strings {
         _ => _t('Other', 'अन्य', 'ಇತರೆ'),
       };
 
+  // Relative dates (utils/relative_date.dart)
+  String get today => _t('Today', 'आज', 'ಇಂದು');
+  String get yesterday => _t('Yesterday', 'कल', 'ನಿನ್ನೆ');
+
   // Letter templates (models/letter_template.dart)
   String letterTemplateLabel(String key) => switch (key) {
         'deductionExplanation' =>

@@ -278,7 +278,7 @@ class _EvidenceTile extends StatelessWidget {
                     ],
                   ),
                   Text(
-                    formatRelativeDate(item.capturedAt),
+                    formatRelativeDate(item.capturedAt, S(context)),
                     style: AppTextStyles.bodyMuted,
                   ),
                 ],

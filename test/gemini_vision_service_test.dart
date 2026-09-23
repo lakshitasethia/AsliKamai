@@ -49,4 +49,34 @@ void main() {
     expect(GeminiVisionService.models.first, 'gemini-3.6-flash');
     expect(GeminiVisionService.models.length, greaterThan(1));
   });
+
+  group('GeminiRoute', () {
+    test('goes through the Supabase proxy when it is configured', () {
+      final route = GeminiRoute.fromEnv({
+        'SUPABASE_URL': 'https://abc.supabase.co',
+        'SUPABASE_ANON_KEY': 'anon',
+        'GEMINI_API_KEY': 'secret',
+      })!;
+
+      expect(
+        route.uriFor('gemini-3.6-flash').toString(),
+        'https://abc.supabase.co/functions/v1/gemini-proxy?model=gemini-3.6-flash',
+      );
+      expect(route.headers['Authorization'], 'Bearer anon');
+      expect(route.headers.values, isNot(contains('secret')));
+    });
+
+    test('falls back to a direct Gemini key for local dev', () {
+      final route = GeminiRoute.fromEnv({'GEMINI_API_KEY': 'secret'})!;
+
+      expect(route.uriFor('m').host, 'generativelanguage.googleapis.com');
+      expect(route.uriFor('m').query, isEmpty);
+      expect(route.headers['x-goog-api-key'], 'secret');
+    });
+
+    test('is unconfigured with neither set', () {
+      expect(GeminiRoute.fromEnv({}), isNull);
+      expect(GeminiRoute.fromEnv({'GEMINI_API_KEY': 'your_key_here'}), isNull);
+    });
+  });
 }

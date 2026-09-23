@@ -154,7 +154,7 @@ class _LetterHistoryTile extends StatelessWidget {
       leading: Icon(type.icon, color: AppColors.primaryGreen),
       title: Text(S(context).letterTemplateLabel(type.name), style: AppTextStyles.body),
       subtitle: Text(
-        '${lang.label} • ${formatRelativeDate(letter.generatedAt)}',
+        '${lang.label} • ${formatRelativeDate(letter.generatedAt, S(context))}',
         style: AppTextStyles.bodyMuted,
       ),
       onTap: _open,

@@ -323,7 +323,7 @@ class _ExpenseTile extends StatelessWidget {
         child: Icon(category.icon, color: AppColors.primaryGreen),
       ),
       title: Text(S(context).expenseCategoryLabel(category.name), style: AppTextStyles.body),
-      subtitle: Text(formatRelativeDate(expense.timestamp), style: AppTextStyles.bodyMuted),
+      subtitle: Text(formatRelativeDate(expense.timestamp, S(context)), style: AppTextStyles.bodyMuted),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

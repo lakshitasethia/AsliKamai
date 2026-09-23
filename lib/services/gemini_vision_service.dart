@@ -28,6 +28,43 @@ class _RetryableGeminiException implements Exception {
   final String message;
 }
 
+/// Where generateContent requests go. Release builds go through the
+/// `gemini-proxy` Supabase Edge Function, which holds the Gemini key as a
+/// server secret — anything in `.env` is bundled into the APK and readable
+/// by anyone who unzips it. A direct GEMINI_API_KEY is a local-dev fallback
+/// only.
+@visibleForTesting
+class GeminiRoute {
+  GeminiRoute._(this._uriFor, this.headers);
+
+  final Uri Function(String model) _uriFor;
+  final Map<String, String> headers;
+
+  Uri uriFor(String model) => _uriFor(model);
+
+  static GeminiRoute? fromEnv(Map<String, String> env) {
+    final supabaseUrl = env['SUPABASE_URL'] ?? '';
+    final anonKey = env['SUPABASE_ANON_KEY'] ?? '';
+    if (supabaseUrl.isNotEmpty && anonKey.isNotEmpty) {
+      return GeminiRoute._(
+        (model) => Uri.parse('$supabaseUrl/functions/v1/gemini-proxy')
+            .replace(queryParameters: {'model': model}),
+        {'Authorization': 'Bearer $anonKey', 'apikey': anonKey},
+      );
+    }
+    final apiKey = env['GEMINI_API_KEY'] ?? '';
+    if (apiKey.isNotEmpty && apiKey != 'your_key_here') {
+      return GeminiRoute._(
+        (model) => Uri.parse(
+          'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent',
+        ),
+        {'x-goog-api-key': apiKey},
+      );
+    }
+    return null;
+  }
+}
+
 /// Sends one delivery-partner-app screenshot to Gemini and gets back a
 /// structured order record. Screenshot bytes are sent for this single
 /// call only and are not persisted anywhere server-side by this app.
@@ -49,9 +86,6 @@ class GeminiVisionService {
   // reports its per-day quota as spent, stop paying a wasted round-trip
   // on it for every remaining screenshot this session.
   static final _dailyQuotaSpent = <String>{};
-
-  static String _endpointFor(String model) =>
-      'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent';
 
   /// Builds the vision prompt anchored to [today] — without this anchor,
   /// Gemini has no way to resolve a screenshot's date when it's shown
@@ -228,10 +262,8 @@ Rules:
     required List<int> imageBytes,
     required Map<String, Object> schema,
   }) async {
-    final apiKey = dotenv.env['GEMINI_API_KEY'];
-    if (apiKey == null || apiKey.isEmpty || apiKey == 'your_key_here') {
-      throw GeminiNotConfiguredException();
-    }
+    final route = GeminiRoute.fromEnv(dotenv.env);
+    if (route == null) throw GeminiNotConfiguredException();
 
     var lastError = 'Gemini unavailable.';
     for (var round = 1; round <= _maxRounds; round++) {
@@ -239,7 +271,7 @@ Rules:
         if (_dailyQuotaSpent.contains(model)) continue;
         try {
           return await _generateOnce(
-            apiKey: apiKey,
+            route: route,
             model: model,
             prompt: prompt,
             imageBytes: imageBytes,
@@ -260,7 +292,7 @@ Rules:
   }
 
   Future<Map<String, dynamic>> _generateOnce({
-    required String apiKey,
+    required GeminiRoute route,
     required String model,
     required String prompt,
     required List<int> imageBytes,
@@ -294,8 +326,8 @@ Rules:
     try {
       response = await http
           .post(
-            Uri.parse('${_endpointFor(model)}?key=$apiKey'),
-            headers: {'Content-Type': 'application/json'},
+            route.uriFor(model),
+            headers: {'Content-Type': 'application/json', ...route.headers},
             body: body,
           )
           .timeout(_requestTimeout);

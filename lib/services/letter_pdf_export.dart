@@ -5,6 +5,8 @@ import 'package:flutter/painting.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../l10n/app_locale.dart';
+import '../l10n/strings.dart';
 import '../models/letter_template.dart';
 import 'evidence_pdf_export.dart' show sanitizeForPdf;
 
@@ -28,16 +30,19 @@ Future<Uint8List> buildLetterPdf({
   required LetterLanguage lang,
   required String body,
 }) {
+  // The heading is written in the letter's language, not the app's.
+  final title =
+      Strings(AppLocale.values.byName(lang.name)).letterTemplateLabel(type.name);
   return switch (lang) {
-    LetterLanguage.english => _buildTextPdf(type: type, body: body),
+    LetterLanguage.english => _buildTextPdf(title: title, body: body),
     LetterLanguage.hindi ||
     LetterLanguage.kannada =>
-      _buildRasterPdf(type: type, body: body),
+      _buildRasterPdf(title: title, body: body),
   };
 }
 
 Future<Uint8List> _buildTextPdf({
-  required LetterTemplateType type,
+  required String title,
   required String body,
 }) {
   final doc = pw.Document();
@@ -45,7 +50,7 @@ Future<Uint8List> _buildTextPdf({
     pw.MultiPage(
       build: (context) => [
         pw.Text(
-          type.label,
+          title,
           style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
         ),
         pw.SizedBox(height: 20),
@@ -105,7 +110,7 @@ class _Slice {
 }
 
 Future<Uint8List> _buildRasterPdf({
-  required LetterTemplateType type,
+  required String title,
   required String body,
 }) async {
   final contentWidth = _pageWidth - 2 * _margin;
@@ -120,7 +125,7 @@ Future<Uint8List> _buildRasterPdf({
 
   final blocks = <_Block>[
     _TextBlock(layout(
-      type.label,
+      title,
       const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _ink),
     )),
     _GapBlock(20),

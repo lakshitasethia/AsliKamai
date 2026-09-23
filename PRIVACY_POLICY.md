@@ -60,4 +60,4 @@ updated first. Those features will be opt-in, and any pooled data will be anonym
 
 ## Contact
 
-Questions: `<contact email — to be filled in before publishing>`
+Questions: ksethia1978@gmail.com
