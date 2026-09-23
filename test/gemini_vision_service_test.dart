@@ -54,7 +54,7 @@ void main() {
     test('goes through the Supabase proxy when it is configured', () {
       final route = GeminiRoute.fromEnv({
         'SUPABASE_URL': 'https://abc.supabase.co',
-        'SUPABASE_ANON_KEY': 'anon',
+        'SUPABASE_PUBLISHABLE_KEY': 'sb_publishable_x',
         'GEMINI_API_KEY': 'secret',
       })!;
 
@@ -62,7 +62,7 @@ void main() {
         route.uriFor('gemini-3.6-flash').toString(),
         'https://abc.supabase.co/functions/v1/gemini-proxy?model=gemini-3.6-flash',
       );
-      expect(route.headers['Authorization'], 'Bearer anon');
+      expect(route.headers, {'apikey': 'sb_publishable_x'});
       expect(route.headers.values, isNot(contains('secret')));
     });
 

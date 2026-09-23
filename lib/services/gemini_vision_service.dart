@@ -44,12 +44,14 @@ class GeminiRoute {
 
   static GeminiRoute? fromEnv(Map<String, String> env) {
     final supabaseUrl = env['SUPABASE_URL'] ?? '';
-    final anonKey = env['SUPABASE_ANON_KEY'] ?? '';
-    if (supabaseUrl.isNotEmpty && anonKey.isNotEmpty) {
+    final publishableKey = env['SUPABASE_PUBLISHABLE_KEY'] ?? '';
+    if (supabaseUrl.isNotEmpty && publishableKey.isNotEmpty) {
       return GeminiRoute._(
         (model) => Uri.parse('$supabaseUrl/functions/v1/gemini-proxy')
             .replace(queryParameters: {'model': model}),
-        {'Authorization': 'Bearer $anonKey', 'apikey': anonKey},
+        // Publishable keys go in `apikey` only — as a Bearer token the
+        // platform tries to parse them as a JWT and rejects the request.
+        {'apikey': publishableKey},
       );
     }
     final apiKey = env['GEMINI_API_KEY'] ?? '';

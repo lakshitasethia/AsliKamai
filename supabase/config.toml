@@ -1,0 +1,6 @@
+project_id = "wwsggroioiptyhyrylnm"
+
+# The app authenticates with a publishable key (not a JWT); the function
+# checks the apikey header itself.
+[functions.gemini-proxy]
+verify_jwt = false

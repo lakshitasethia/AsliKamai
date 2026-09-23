@@ -52,3 +52,7 @@ app.*.map.json
 
 # Claude Code local session artifacts (not project code)
 .claude/
+
+# Private keys kept out of the APK (see .env)
+secrets.local.env
+supabase/.temp/

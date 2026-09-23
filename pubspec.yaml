@@ -101,8 +101,8 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # .env holds the Gemini API key locally; it is gitignored and never
-  # committed. See README.md for how to set it up.
+  # .env holds only public config (Supabase URL + publishable key); it is
+  # bundled into the APK, so private keys never go here — see .env.example.
   assets:
     - .env
 
