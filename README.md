@@ -23,3 +23,22 @@ flutter run
 ```
 
 See `build_execution.md` for the full phase plan and how each phase is tested.
+
+## Testing
+
+```
+flutter analyze
+flutter test                                   # unit + widget tests (host)
+
+# On a connected Android phone (`flutter devices` for the id):
+flutter test integration_test/screen_walkthrough_test.dart -d <id> --no-uninstall
+flutter test integration_test/ocr_proxy_test.dart -d <id> --no-uninstall
+```
+
+- `screen_walkthrough_test` opens every screen in English, Hindi and Kannada,
+  at normal and 1.3× text size, and fails on any render error (overflows etc).
+  It uses an in-memory database, so the data already on the phone is untouched —
+  but keep `--no-uninstall`: without it `flutter test` uninstalls the app
+  afterwards, deleting everything saved in it.
+- `ocr_proxy_test` sends two synthetic screenshots through the live
+  `gemini-proxy` Edge Function (2 Gemini calls per run).
