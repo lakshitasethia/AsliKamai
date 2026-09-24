@@ -228,6 +228,13 @@ class AppDatabase extends _$AppDatabase {
   Future<void> deleteLetter(int id) =>
       (delete(letters)..where((l) => l.id.equals(id))).go();
 
+  Future<Order> orderById(int id) =>
+      (select(orders)..where((o) => o.id.equals(id))).getSingle();
+  Future<Expense> expenseById(int id) =>
+      (select(expenses)..where((e) => e.id.equals(id))).getSingle();
+  Future<Letter> letterById(int id) =>
+      (select(letters)..where((l) => l.id.equals(id))).getSingle();
+
   // "Export everything" (Phase 8): every row, unfiltered by week/type.
   Future<List<Order>> allOrders() => select(orders).get();
   Future<List<Expense>> allExpenses() => select(expenses).get();

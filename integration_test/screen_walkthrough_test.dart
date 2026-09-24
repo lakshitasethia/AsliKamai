@@ -101,7 +101,8 @@ void main() {
   testWidgets('every screen renders without errors in every language', (
     tester,
   ) async {
-    dotenv.testLoad(fileInput: '');
+    await dotenv.load(fileName: '.env');
+    await initCloud();
     await seed();
     final originalLocale = await AppLocale.load();
 
@@ -261,6 +262,7 @@ void main() {
           await visit('$label Profile', () => tapIcon(Icons.person_outline));
           await visit('$label Share card', () => tapIcon(Icons.share_outlined));
           await visit('$label About', () => tapIcon(Icons.info_outline));
+          await visit('$label Cloud backup', () => tapIcon(Icons.cloud_outlined));
 
           where = '$label Language picker';
 

@@ -284,13 +284,149 @@ class Strings {
   String get deleteEverythingConfirmTitle =>
       _t('Delete everything?', 'सब कुछ हटाएं?', 'ಎಲ್ಲವನ್ನೂ ಅಳಿಸುವುದೇ?');
   String get deleteEverythingConfirmBody => _t(
-        'This permanently deletes every order, expense, evidence photo, and letter, plus your saved name and platforms. This cannot be undone.',
-        'यह हर ऑर्डर, खर्च, सबूत की फोटो और पत्र, साथ ही आपका सेव किया गया नाम और प्लेटफ़ॉर्म हमेशा के लिए हटा देगा. यह वापस नहीं हो सकता.',
-        'ಇದು ಪ್ರತಿ ಆರ್ಡರ್, ಖರ್ಚು, ಪುರಾವೆ ಫೋಟೋ ಮತ್ತು ಪತ್ರ, ಜೊತೆಗೆ ನಿಮ್ಮ ಉಳಿಸಿದ ಹೆಸರು ಮತ್ತು ಪ್ಲಾಟ್‌ಫಾರ್ಮ್‌ಗಳನ್ನು ಶಾಶ್ವತವಾಗಿ ಅಳಿಸುತ್ತದೆ. ಇದನ್ನು ಹಿಂತಿರುಗಿಸಲಾಗುವುದಿಲ್ಲ.',
+        'This permanently deletes every order, expense, evidence photo, and letter, plus your saved name and platforms — and your cloud backup and account, if you use backup. This cannot be undone.',
+        'यह हर ऑर्डर, खर्च, सबूत की फोटो और पत्र, साथ ही आपका सेव किया गया नाम और प्लेटफ़ॉर्म हमेशा के लिए हटा देगा — और अगर आप बैकअप इस्तेमाल करते हैं तो आपका क्लाउड बैकअप और अकाउंट भी. यह वापस नहीं हो सकता.',
+        'ಇದು ಪ್ರತಿ ಆರ್ಡರ್, ಖರ್ಚು, ಪುರಾವೆ ಫೋಟೋ ಮತ್ತು ಪತ್ರ, ಜೊತೆಗೆ ನಿಮ್ಮ ಉಳಿಸಿದ ಹೆಸರು ಮತ್ತು ಪ್ಲಾಟ್‌ಫಾರ್ಮ್‌ಗಳನ್ನು ಶಾಶ್ವತವಾಗಿ ಅಳಿಸುತ್ತದೆ — ನೀವು ಬ್ಯಾಕಪ್ ಬಳಸುತ್ತಿದ್ದರೆ ನಿಮ್ಮ ಕ್ಲೌಡ್ ಬ್ಯಾಕಪ್ ಮತ್ತು ಖಾತೆಯನ್ನೂ ಸಹ. ಇದನ್ನು ಹಿಂತಿರುಗಿಸಲಾಗುವುದಿಲ್ಲ.',
       );
   String get everythingDeletedToast =>
       _t('Everything has been deleted.', 'सब कुछ हटा दिया गया है.', 'ಎಲ್ಲವನ್ನೂ ಅಳಿಸಲಾಗಿದೆ.');
   String get savedToast => _t('Saved.', 'सेव हो गया.', 'ಉಳಿಸಲಾಗಿದೆ.');
+
+  // Cloud backup (backup_screen.dart, Phase 9)
+  String get cloudBackup => _t('Cloud backup', 'क्लाउड बैकअप', 'ಕ್ಲೌಡ್ ಬ್ಯಾಕಪ್');
+  String get backupOff => _t('Off', 'बंद', 'ಆಫ್');
+  String get backupOn => _t('On', 'चालू', 'ಆನ್');
+  String get backupIntroTitle =>
+      _t('Keep your evidence safe', 'अपने सबूत सुरक्षित रखें', 'ನಿಮ್ಮ ಪುರಾವೆಗಳನ್ನು ಸುರಕ್ಷಿತವಾಗಿಡಿ');
+  String get backupIntroBody => _t(
+        'If your phone is lost, stolen or reset, sign in on your new phone to get back your evidence photos, letters and profile. Only you can see your backup. It is off until you sign in.',
+        'अगर आपका फ़ोन खो जाए, चोरी हो जाए या रीसेट हो जाए, तो नए फ़ोन में साइन इन करके अपने सबूत की फोटो, पत्र और प्रोफ़ाइल वापस पाएं. आपका बैकअप सिर्फ़ आप देख सकते हैं. साइन इन करने तक यह बंद रहता है.',
+        'ನಿಮ್ಮ ಫೋನ್ ಕಳೆದುಹೋದರೆ, ಕಳ್ಳತನವಾದರೆ ಅಥವಾ ರೀಸೆಟ್ ಆದರೆ, ಹೊಸ ಫೋನ್‌ನಲ್ಲಿ ಸೈನ್ ಇನ್ ಮಾಡಿ ನಿಮ್ಮ ಪುರಾವೆ ಫೋಟೋಗಳು, ಪತ್ರಗಳು ಮತ್ತು ಪ್ರೊಫೈಲ್ ಅನ್ನು ಮರಳಿ ಪಡೆಯಿರಿ. ನಿಮ್ಮ ಬ್ಯಾಕಪ್ ಅನ್ನು ನೀವು ಮಾತ್ರ ನೋಡಬಹುದು. ನೀವು ಸೈನ್ ಇನ್ ಮಾಡುವವರೆಗೆ ಇದು ಆಫ್ ಆಗಿರುತ್ತದೆ.',
+      );
+  String get backupEarningsNote => _t(
+        'Your orders and expenses stay only on this phone unless you switch them on.',
+        'आपके ऑर्डर और खर्च सिर्फ़ इस फ़ोन में रहते हैं, जब तक आप इन्हें चालू न करें.',
+        'ನೀವು ಆನ್ ಮಾಡದ ಹೊರತು ನಿಮ್ಮ ಆರ್ಡರ್‌ಗಳು ಮತ್ತು ಖರ್ಚುಗಳು ಈ ಫೋನ್‌ನಲ್ಲೇ ಇರುತ್ತವೆ.',
+      );
+  String get signInWithGoogle => _t('Sign in with Google', 'Google से साइन इन करें', 'Google ಮೂಲಕ ಸೈನ್ ಇನ್ ಮಾಡಿ');
+  String get backupNotSetUp => _t(
+        'Cloud backup is not set up in this version of the app yet.',
+        'ऐप के इस वर्ज़न में क्लाउड बैकअप अभी सेट नहीं है.',
+        'ಆ್ಯಪ್‌ನ ಈ ಆವೃತ್ತಿಯಲ್ಲಿ ಕ್ಲೌಡ್ ಬ್ಯಾಕಪ್ ಇನ್ನೂ ಸಿದ್ಧವಾಗಿಲ್ಲ.',
+      );
+  String get signInFailed => _t(
+        'Couldn\'t sign in. Check your internet and try again.',
+        'साइन इन नहीं हो सका. इंटरनेट चेक करके फिर कोशिश करें.',
+        'ಸೈನ್ ಇನ್ ಆಗಲಿಲ್ಲ. ಇಂಟರ್ನೆಟ್ ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+      );
+  String signedInAs(String who) => _t('Signed in as $who', '$who के रूप में साइन इन', '$who ಆಗಿ ಸೈನ್ ಇನ್ ಆಗಿದೆ');
+  String get backUpAutomatically =>
+      _t('Back up automatically', 'अपने आप बैकअप लें', 'ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಬ್ಯಾಕಪ್ ಮಾಡಿ');
+  String get backUpAutomaticallyHint => _t(
+        'Evidence photos, letters and your profile, a little after every change.',
+        'हर बदलाव के थोड़ी देर बाद सबूत की फोटो, पत्र और आपकी प्रोफ़ाइल.',
+        'ಪ್ರತಿ ಬದಲಾವಣೆಯ ಸ್ವಲ್ಪ ಸಮಯದ ನಂತರ ಪುರಾವೆ ಫೋಟೋಗಳು, ಪತ್ರಗಳು ಮತ್ತು ನಿಮ್ಮ ಪ್ರೊಫೈಲ್.',
+      );
+  String get includeOrdersExpenses =>
+      _t('Also back up orders & expenses', 'ऑर्डर और खर्च का भी बैकअप लें', 'ಆರ್ಡರ್‌ಗಳು ಮತ್ತು ಖರ್ಚುಗಳನ್ನೂ ಬ್ಯಾಕಪ್ ಮಾಡಿ');
+  String get includeOrdersExpensesHint => _t(
+        'Your earnings history and order screenshots. Off by default.',
+        'आपकी कमाई का रिकॉर्ड और ऑर्डर के स्क्रीनशॉट. पहले से बंद.',
+        'ನಿಮ್ಮ ಗಳಿಕೆಯ ಇತಿಹಾಸ ಮತ್ತು ಆರ್ಡರ್ ಸ್ಕ್ರೀನ್‌ಶಾಟ್‌ಗಳು. ಮೊದಲೇ ಆಫ್ ಆಗಿದೆ.',
+      );
+  String get lastBackup => _t('Last backup', 'पिछला बैकअप', 'ಕೊನೆಯ ಬ್ಯಾಕಪ್');
+  String get neverBackedUp => _t('Not yet', 'अभी नहीं', 'ಇನ್ನೂ ಇಲ್ಲ');
+  String get backingUp => _t('Backing up…', 'बैकअप हो रहा है…', 'ಬ್ಯಾಕಪ್ ಆಗುತ್ತಿದೆ…');
+  String get backUpNow => _t('Back up now', 'अभी बैकअप लें', 'ಈಗ ಬ್ಯಾಕಪ್ ಮಾಡಿ');
+  String get backupDone => _t('Backup done.', 'बैकअप हो गया.', 'ಬ್ಯಾಕಪ್ ಆಗಿದೆ.');
+  String get signOut => _t('Sign out', 'साइन आउट करें', 'ಸೈನ್ ಔಟ್ ಮಾಡಿ');
+  String get deleteCloudBackup =>
+      _t('Delete cloud backup', 'क्लाउड बैकअप हटाएं', 'ಕ್ಲೌಡ್ ಬ್ಯಾಕಪ್ ಅಳಿಸಿ');
+  String get deleteCloudBackupConfirm => _t(
+        'This deletes your backup from the cloud. Everything on this phone stays.',
+        'इससे क्लाउड से आपका बैकअप हट जाएगा. इस फ़ोन का सब कुछ बना रहेगा.',
+        'ಇದು ಕ್ಲೌಡ್‌ನಿಂದ ನಿಮ್ಮ ಬ್ಯಾಕಪ್ ಅನ್ನು ಅಳಿಸುತ್ತದೆ. ಈ ಫೋನ್‌ನಲ್ಲಿರುವುದೆಲ್ಲ ಹಾಗೆಯೇ ಇರುತ್ತದೆ.',
+      );
+  String get cloudBackupDeleted =>
+      _t('Cloud backup deleted.', 'क्लाउड बैकअप हटा दिया गया.', 'ಕ್ಲೌಡ್ ಬ್ಯಾಕಪ್ ಅಳಿಸಲಾಗಿದೆ.');
+  String get turnOffBackupTitle =>
+      _t('Turn off backup?', 'बैकअप बंद करें?', 'ಬ್ಯಾಕಪ್ ಆಫ್ ಮಾಡುವುದೇ?');
+  String get turnOffBackupBody => _t(
+        'Nothing new will be backed up. Do you also want to delete the copy already in the cloud?',
+        'अब कुछ नया बैकअप नहीं होगा. क्या आप क्लाउड में पहले से मौजूद कॉपी भी हटाना चाहते हैं?',
+        'ಇನ್ನು ಮುಂದೆ ಹೊಸದೇನೂ ಬ್ಯಾಕಪ್ ಆಗುವುದಿಲ್ಲ. ಕ್ಲೌಡ್‌ನಲ್ಲಿ ಈಗಾಗಲೇ ಇರುವ ಪ್ರತಿಯನ್ನೂ ಅಳಿಸಬೇಕೇ?',
+      );
+  String get keepCloudCopy => _t('Keep cloud copy', 'क्लाउड कॉपी रखें', 'ಕ್ಲೌಡ್ ಪ್ರತಿ ಇಡಿ');
+  String get deleteCloudCopy => _t('Delete cloud copy', 'क्लाउड कॉपी हटाएं', 'ಕ್ಲೌಡ್ ಪ್ರತಿ ಅಳಿಸಿ');
+  String get foundBackupTitle =>
+      _t('We found your backup', 'आपका बैकअप मिल गया', 'ನಿಮ್ಮ ಬ್ಯಾಕಪ್ ಸಿಕ್ಕಿದೆ');
+  String foundBackupSummary(String when, int docs, int letters, int orders) => _t(
+        'Backed up $when: $docs evidence item(s), $letters letter(s)${orders > 0 ? ', $orders order(s)' : ''}.',
+        '$when को बैकअप: $docs सबूत, $letters पत्र${orders > 0 ? ', $orders ऑर्डर' : ''}.',
+        '$when ಬ್ಯಾಕಪ್: $docs ಪುರಾವೆ, $letters ಪತ್ರ${orders > 0 ? ', $orders ಆರ್ಡರ್' : ''}.',
+      );
+  String get restoreToThisPhone =>
+      _t('Restore to this phone', 'इस फ़ोन में वापस लाएं', 'ಈ ಫೋನ್‌ಗೆ ಮರುಸ್ಥಾಪಿಸಿ');
+  String get restoreHint => _t(
+        'Adds your backup to this phone. Nothing already here is deleted.',
+        'आपका बैकअप इस फ़ोन में जोड़ता है. यहां पहले से मौजूद कुछ भी नहीं हटता.',
+        'ನಿಮ್ಮ ಬ್ಯಾಕಪ್ ಅನ್ನು ಈ ಫೋನ್‌ಗೆ ಸೇರಿಸುತ್ತದೆ. ಇಲ್ಲಿ ಈಗಾಗಲೇ ಇರುವ ಯಾವುದನ್ನೂ ಅಳಿಸುವುದಿಲ್ಲ.',
+      );
+  String get replaceCloudBackup =>
+      _t('Replace it with this phone\'s data', 'इसे इस फ़ोन के डेटा से बदलें', 'ಇದನ್ನು ಈ ಫೋನ್‌ನ ಡೇಟಾದಿಂದ ಬದಲಾಯಿಸಿ');
+  String get replaceCloudBackupConfirm => _t(
+        'Your cloud backup will be replaced by what is on this phone. Anything only in the backup will be lost.',
+        'आपका क्लाउड बैकअप इस फ़ोन के डेटा से बदल जाएगा. जो सिर्फ़ बैकअप में है, वह मिट जाएगा.',
+        'ನಿಮ್ಮ ಕ್ಲೌಡ್ ಬ್ಯಾಕಪ್ ಈ ಫೋನ್‌ನಲ್ಲಿರುವುದರಿಂದ ಬದಲಾಗುತ್ತದೆ. ಬ್ಯಾಕಪ್‌ನಲ್ಲಿ ಮಾತ್ರ ಇರುವುದು ಕಳೆದುಹೋಗುತ್ತದೆ.',
+      );
+  String get replace => _t('Replace', 'बदलें', 'ಬದಲಾಯಿಸಿ');
+  String get restoring => _t('Restoring…', 'वापस लाया जा रहा है…', 'ಮರುಸ್ಥಾಪಿಸಲಾಗುತ್ತಿದೆ…');
+  String restoredSummary(int count) => _t(
+        'Restored $count item(s).',
+        '$count चीज़ें वापस लाई गईं.',
+        '$count ಐಟಂಗಳನ್ನು ಮರುಸ್ಥಾಪಿಸಲಾಗಿದೆ.',
+      );
+  String damagedFilesNote(int count) => _t(
+        '$count file(s) in the backup were damaged and were skipped.',
+        'बैकअप की $count फ़ाइलें खराब थीं, उन्हें छोड़ दिया गया.',
+        'ಬ್ಯಾಕಪ್‌ನ $count ಫೈಲ್‌ಗಳು ಹಾಳಾಗಿದ್ದವು, ಅವುಗಳನ್ನು ಬಿಡಲಾಗಿದೆ.',
+      );
+  String get checkingBackup =>
+      _t('Checking for a backup…', 'बैकअप देखा जा रहा है…', 'ಬ್ಯಾಕಪ್ ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ…');
+  String get problemNetwork => _t(
+        'No internet. We\'ll try again automatically.',
+        'इंटरनेट नहीं है. हम अपने आप फिर कोशिश करेंगे.',
+        'ಇಂಟರ್ನೆಟ್ ಇಲ್ಲ. ನಾವು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸುತ್ತೇವೆ.',
+      );
+  String get problemNeedsUpdate => _t(
+        'This backup was made by a newer version of AsliKamai. Update the app to restore it.',
+        'यह बैकअप AsliKamai के नए वर्ज़न से बना है. इसे वापस लाने के लिए ऐप अपडेट करें.',
+        'ಈ ಬ್ಯಾಕಪ್ ಅನ್ನು AsliKamai ನ ಹೊಸ ಆವೃತ್ತಿ ಮಾಡಿದೆ. ಮರುಸ್ಥಾಪಿಸಲು ಆ್ಯಪ್ ಅಪ್‌ಡೇಟ್ ಮಾಡಿ.',
+      );
+  String get problemDamaged => _t(
+        'Your cloud backup could not be read.',
+        'आपका क्लाउड बैकअप पढ़ा नहीं जा सका.',
+        'ನಿಮ್ಮ ಕ್ಲೌಡ್ ಬ್ಯಾಕಪ್ ಓದಲು ಆಗಲಿಲ್ಲ.',
+      );
+  String get problemSignedOut => _t(
+        'You were signed out. Please sign in again.',
+        'आप साइन आउट हो गए. कृपया फिर से साइन इन करें.',
+        'ನೀವು ಸೈನ್ ಔಟ್ ಆಗಿದ್ದೀರಿ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಸೈನ್ ಇನ್ ಮಾಡಿ.',
+      );
+  String get problemOther => _t(
+        'Backup didn\'t work. Please try again.',
+        'बैकअप नहीं हो सका. कृपया फिर कोशिश करें.',
+        'ಬ್ಯಾಕಪ್ ಆಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+      );
+  String get cloudDeleteFailedTitle =>
+      _t('Couldn\'t delete your cloud backup', 'क्लाउड बैकअप नहीं हट सका', 'ಕ್ಲೌಡ್ ಬ್ಯಾಕಪ್ ಅಳಿಸಲಾಗಲಿಲ್ಲ');
+  String get cloudDeleteFailedBody => _t(
+        'Check your internet and try again. Or delete from this phone only — your cloud backup and account stay until you delete them later.',
+        'इंटरनेट चेक करके फिर कोशिश करें. या सिर्फ़ इस फ़ोन से हटाएं — आपका क्लाउड बैकअप और अकाउंट तब तक रहेंगे जब तक आप उन्हें बाद में न हटाएं.',
+        'ಇಂಟರ್ನೆಟ್ ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ. ಅಥವಾ ಈ ಫೋನ್‌ನಿಂದ ಮಾತ್ರ ಅಳಿಸಿ — ನಂತರ ನೀವು ಅಳಿಸುವವರೆಗೆ ನಿಮ್ಮ ಕ್ಲೌಡ್ ಬ್ಯಾಕಪ್ ಮತ್ತು ಖಾತೆ ಉಳಿಯುತ್ತವೆ.',
+      );
+  String get deleteFromPhoneOnly =>
+      _t('Delete from this phone only', 'सिर्फ़ इस फ़ोन से हटाएं', 'ಈ ಫೋನ್‌ನಿಂದ ಮಾತ್ರ ಅಳಿಸಿ');
 
   // Settings/Profile screen (settings_screen.dart)
   String get platformsYouWork => _t('Platform(s) you work', 'आप जिन प्लेटफ़ॉर्म पर काम करते हैं', 'ನೀವು ಕೆಲಸ ಮಾಡುವ ಪ್ಲಾಟ್‌ಫಾರ್ಮ್‌ಗಳು');
@@ -338,9 +474,9 @@ class Strings {
   String get aboutDataStaysHeader =>
       _t('Your data stays on your phone', 'आपका डेटा आपके फ़ोन में ही रहता है', 'ನಿಮ್ಮ ಡೇಟಾ ನಿಮ್ಮ ಫೋನ್‌ನಲ್ಲೇ ಇರುತ್ತದೆ');
   String get aboutDataStaysBody => _t(
-        'Orders, expenses, evidence photos and letters are stored only in this app\'s local database — never sent anywhere except when a screenshot is read by the vision AI to extract order details, or when you explicitly export, share, or generate a letter. There is no account and no cloud sync in this build.',
-        'ऑर्डर, खर्च, सबूत की फोटो और पत्र सिर्फ़ इस ऐप के लोकल डेटाबेस में सेव होते हैं — कभी कहीं नहीं भेजे जाते, सिवाय तब जब कोई स्क्रीनशॉट ऑर्डर की जानकारी निकालने के लिए विज़न AI को भेजा जाता है, या जब आप खुद एक्सपोर्ट, शेयर या पत्र बनाते हैं. इस वर्ज़न में कोई अकाउंट या क्लाउड सिंक नहीं है.',
-        'ಆರ್ಡರ್‌ಗಳು, ಖರ್ಚುಗಳು, ಪುರಾವೆ ಫೋಟೋಗಳು ಮತ್ತು ಪತ್ರಗಳು ಈ ಆ್ಯಪ್‌ನ ಲೋಕಲ್ ಡೇಟಾಬೇಸ್‌ನಲ್ಲಿ ಮಾತ್ರ ಸಂಗ್ರಹವಾಗುತ್ತವೆ — ಆರ್ಡರ್ ವಿವರಗಳನ್ನು ಹೊರತೆಗೆಯಲು ಸ್ಕ್ರೀನ್‌ಶಾಟ್ ಅನ್ನು ವಿಷನ್ AI ಓದಿದಾಗ, ಅಥವಾ ನೀವು ಸ್ವತಃ ರಫ್ತು, ಶೇರ್ ಅಥವಾ ಪತ್ರ ರಚಿಸಿದಾಗ ಹೊರತು ಎಲ್ಲಿಗೂ ಕಳುಹಿಸಲಾಗುವುದಿಲ್ಲ. ಈ ಆವೃತ್ತಿಯಲ್ಲಿ ಯಾವುದೇ ಖಾತೆ ಅಥವಾ ಕ್ಲೌಡ್ ಸಿಂಕ್ ಇಲ್ಲ.',
+        'Orders, expenses, evidence photos and letters are stored in this app\'s local database. They only leave your phone when a screenshot is read by the vision AI to extract order details, when you export, share or generate a letter, or if you turn on Cloud backup (More → Cloud backup). Backup is off until you sign in, leaves out orders and expenses unless you switch them on, and only you can see it.',
+        'ऑर्डर, खर्च, सबूत की फोटो और पत्र इस ऐप के लोकल डेटाबेस में सेव होते हैं. ये आपके फ़ोन से सिर्फ़ तब बाहर जाते हैं जब कोई स्क्रीनशॉट ऑर्डर की जानकारी निकालने के लिए विज़न AI को भेजा जाता है, जब आप एक्सपोर्ट, शेयर या पत्र बनाते हैं, या अगर आप क्लाउड बैकअप (More → क्लाउड बैकअप) चालू करते हैं. साइन इन करने तक बैकअप बंद रहता है, आपके चालू किए बिना ऑर्डर और खर्च उसमें नहीं जाते, और उसे सिर्फ़ आप देख सकते हैं.',
+        'ಆರ್ಡರ್‌ಗಳು, ಖರ್ಚುಗಳು, ಪುರಾವೆ ಫೋಟೋಗಳು ಮತ್ತು ಪತ್ರಗಳು ಈ ಆ್ಯಪ್‌ನ ಲೋಕಲ್ ಡೇಟಾಬೇಸ್‌ನಲ್ಲಿ ಸಂಗ್ರಹವಾಗುತ್ತವೆ. ಆರ್ಡರ್ ವಿವರಗಳನ್ನು ಹೊರತೆಗೆಯಲು ಸ್ಕ್ರೀನ್‌ಶಾಟ್ ಅನ್ನು ವಿಷನ್ AI ಓದಿದಾಗ, ನೀವು ರಫ್ತು, ಶೇರ್ ಅಥವಾ ಪತ್ರ ರಚಿಸಿದಾಗ, ಅಥವಾ ನೀವು ಕ್ಲೌಡ್ ಬ್ಯಾಕಪ್ (More → ಕ್ಲೌಡ್ ಬ್ಯಾಕಪ್) ಆನ್ ಮಾಡಿದಾಗ ಮಾತ್ರ ಅವು ನಿಮ್ಮ ಫೋನ್‌ನಿಂದ ಹೊರಹೋಗುತ್ತವೆ. ನೀವು ಸೈನ್ ಇನ್ ಮಾಡುವವರೆಗೆ ಬ್ಯಾಕಪ್ ಆಫ್ ಆಗಿರುತ್ತದೆ, ನೀವು ಆನ್ ಮಾಡದ ಹೊರತು ಆರ್ಡರ್‌ಗಳು ಮತ್ತು ಖರ್ಚುಗಳು ಅದರಲ್ಲಿ ಇರುವುದಿಲ್ಲ, ಮತ್ತು ಅದನ್ನು ನೀವು ಮಾತ್ರ ನೋಡಬಹುದು.',
       );
   String get aboutYouControlHeader => _t('You control it', 'यह आपके नियंत्रण में है', 'ಇದು ನಿಮ್ಮ ನಿಯಂತ್ರಣದಲ್ಲಿದೆ');
   String get aboutYouControlBody => _t(

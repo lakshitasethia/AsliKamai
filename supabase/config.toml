@@ -4,3 +4,7 @@ project_id = "wwsggroioiptyhyrylnm"
 # checks the apikey header itself.
 [functions.gemini-proxy]
 verify_jwt = false
+
+# Verifies the rider's session token itself (auth.getUser), see index.ts.
+[functions.delete-account]
+verify_jwt = false

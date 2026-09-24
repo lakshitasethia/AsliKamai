@@ -33,6 +33,7 @@ flutter test                                   # unit + widget tests (host)
 # On a connected Android phone (`flutter devices` for the id):
 flutter test integration_test/screen_walkthrough_test.dart -d <id> --no-uninstall
 flutter test integration_test/ocr_proxy_test.dart -d <id> --no-uninstall
+flutter test integration_test/backup_e2e_test.dart -d emulator-5554 --no-uninstall --dart-define=E2E_PASSWORD=...
 ```
 
 - `screen_walkthrough_test` opens every screen in English, Hindi and Kannada,
@@ -42,3 +43,7 @@ flutter test integration_test/ocr_proxy_test.dart -d <id> --no-uninstall
   afterwards, deleting everything saved in it.
 - `ocr_proxy_test` sends two synthetic screenshots through the live
   `gemini-proxy` Edge Function (2 Gemini calls per run).
+- `backup_e2e_test` runs cloud backup end to end against the real Supabase
+  project (sign-in, restore, access rules, delete-account). Emulator only — it
+  wipes the app's local data — and needs two throwaway email accounts; see the
+  file's header and `docs/superpowers/specs/2026-09-24-cloud-backup-design.md`.

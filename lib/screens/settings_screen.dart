@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/strings.dart';
 import '../models/platform.dart';
 import '../models/rider_profile.dart';
+import '../services/backup/backup_controller.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/screen_title.dart';
@@ -50,6 +51,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _saving = true);
     await RiderProfile.saveName(_nameController.text.trim());
     await RiderProfile.savePlatforms(_platforms.toList());
+    // The profile isn't in the database, so it doesn't trigger backups itself.
+    BackupController.instance.scheduleBackup();
     if (!mounted) return;
     setState(() => _saving = false);
     ScaffoldMessenger.of(context)

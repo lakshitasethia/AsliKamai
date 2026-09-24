@@ -4,6 +4,7 @@ import 'package:share_plus/share_plus.dart';
 import '../l10n/app_locale.dart';
 import '../l10n/app_locale_scope.dart';
 import '../l10n/strings.dart';
+import '../services/backup/backup_controller.dart';
 import '../services/data_export.dart';
 import '../services/wipe_local_data.dart';
 import '../theme/app_colors.dart';
@@ -13,6 +14,7 @@ import '../widgets/app_card.dart';
 import '../widgets/screen_title.dart';
 import '../widgets/section_header.dart';
 import 'about_screen.dart';
+import 'backup_screen.dart';
 import 'letter_generator_screen.dart';
 import 'settings_screen.dart';
 import 'share_card_screen.dart';
@@ -66,6 +68,20 @@ class _MoreScreenState extends State<MoreScreen> {
 
     setState(() => _deleting = true);
     try {
+      final backup = BackupController.instance;
+      if (backup.signedIn) {
+        try {
+          await backup.deleteAccount();
+        } catch (e) {
+          debugPrint('AsliKamai: cloud delete failed: $e');
+          if (!mounted) return;
+          final phoneOnly = await _askDeletePhoneOnly();
+          if (!phoneOnly || !mounted) return;
+          // Stop syncing first, so the wiped phone can't be auto-backed-up
+          // as an empty backup over the cloud copy the rider is keeping.
+          await backup.detachFromCloud();
+        }
+      }
       await wipeAllLocalData();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -74,6 +90,28 @@ class _MoreScreenState extends State<MoreScreen> {
     } finally {
       if (mounted) setState(() => _deleting = false);
     }
+  }
+
+  Future<bool> _askDeletePhoneOnly() async {
+    final s = S(context);
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(s.cloudDeleteFailedTitle),
+        content: Text(s.cloudDeleteFailedBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(s.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(s.deleteFromPhoneOnly, style: const TextStyle(color: AppColors.redAlert)),
+          ),
+        ],
+      ),
+    );
+    return result == true;
   }
 
   Future<void> _pickLanguage() async {
@@ -139,6 +177,23 @@ class _MoreScreenState extends State<MoreScreen> {
             padding: EdgeInsets.zero,
             child: Column(
               children: [
+                ListenableBuilder(
+                  listenable: BackupController.instance,
+                  builder: (context, _) {
+                    final backup = BackupController.instance;
+                    return _MoreTile(
+                      icon: Icons.cloud_outlined,
+                      title: s.cloudBackup,
+                      subtitle: backup.signedIn && backup.enabled && backup.linked
+                          ? s.backupOn
+                          : s.backupOff,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const BackupScreen()),
+                      ),
+                    );
+                  },
+                ),
+                const Divider(height: 1, color: AppColors.cardBorder),
                 _MoreTile(
                   icon: Icons.language_outlined,
                   title: s.languageTile,

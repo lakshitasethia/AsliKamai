@@ -187,7 +187,11 @@ work for me" pass.
 
 ---
 
-## Phase 9 — Backend (Supabase), deferred
+## Phase 9 — Backend (Supabase)
+
+> **Status (2026-09-24):** cloud backup built and tested end-to-end — see
+> `docs/superpowers/specs/2026-09-24-cloud-backup-design.md`. Needs the one-time Google OAuth
+> setup listed there before riders can sign in. Anonymous pay-index not started.
 
 **Goal:** optional cloud backup and the anonymous pooled pay-index.
 
