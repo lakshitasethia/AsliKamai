@@ -94,6 +94,31 @@ void main() {
     expect(saved, hasLength(1));
   });
 
+  test('calling twice at the same time does not duplicate evidence', () async {
+    // The home screen fires this on every rebuild without awaiting, so
+    // several calls can overlap.
+    final before = _order(
+      timestamp: DateTime(2026, 9, 9),
+      screenshotPath: '/tmp/before.jpg',
+      sourceScreenshotHash: 'before-hash',
+    );
+    final after = _order(
+      timestamp: DateTime(2026, 9, 16),
+      screenshotPath: '/tmp/after.jpg',
+      sourceScreenshotHash: 'after-hash',
+    );
+    final alert = _alert(before: before, evidence: [after]);
+
+    await Future.wait([
+      saveRateCutEvidence(db, alert),
+      saveRateCutEvidence(db, alert),
+      saveRateCutEvidence(db, alert),
+    ]);
+
+    final saved = await db.watchAllEvidence().first;
+    expect(saved, hasLength(2));
+  });
+
   test('note describes the platform and drop percent', () async {
     final before = _order(
       timestamp: DateTime(2026, 9, 9),

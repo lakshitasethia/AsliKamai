@@ -79,6 +79,16 @@ void main() {
     expect(all.single.type, 'notice'); // the first insert wins
   });
 
+  test('insertEvidenceIfNew copes with duplicates saved by older versions', () async {
+    // Before the race fix, two copies of one photo could be saved; restoring
+    // a backup onto such a phone must not crash.
+    await db.into(db.evidenceItems).insert(evidenceEntry(hash: 'abc'));
+    await db.into(db.evidenceItems).insert(evidenceEntry(hash: 'abc'));
+
+    expect(await db.insertEvidenceIfNew(evidenceEntry(hash: 'abc')), isFalse);
+    expect(await db.watchAllEvidence().first, hasLength(2));
+  });
+
   test('watchAllEvidence orders by capturedAt, most recent first', () async {
     await db.insertEvidenceIfNew(EvidenceItemsCompanion.insert(
       type: 'notice',

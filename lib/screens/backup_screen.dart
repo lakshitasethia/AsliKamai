@@ -27,6 +27,12 @@ class _BackupScreenState extends State<BackupScreen> {
   void initState() {
     super.initState();
     _backup.addListener(_onChange);
+    // Signed in but the restore/replace choice was never made (e.g. the app
+    // was restarted): the check that runs after sign-in has to run again.
+    if (_backup.signedIn && _backup.awaitingDecision && _backup.cloudBackupAwaitingDecision == null &&
+        _backup.cloudBackupUnreadable == null && _backup.problem == null) {
+      _backup.checkCloud();
+    }
   }
 
   @override

@@ -137,18 +137,22 @@ class AppDatabase extends _$AppDatabase {
   /// twice from the gallery) would otherwise silently double-count that
   /// order's pay. Entries with no hash (e.g. hand-edited orders) always
   /// insert. Returns whether it actually inserted.
-  Future<bool> insertOrderIfNew(OrdersCompanion entry) async {
+  Future<bool> insertOrderIfNew(OrdersCompanion entry) {
     final hash = entry.sourceScreenshotHash.present
         ? entry.sourceScreenshotHash.value
         : null;
-    if (hash != null) {
-      final existing = await (select(orders)
-            ..where((o) => o.sourceScreenshotHash.equals(hash)))
-          .getSingleOrNull();
-      if (existing != null) return false;
-    }
-    await into(orders).insert(entry);
-    return true;
+    // One transaction, so overlapping calls can't both pass the check.
+    return transaction(() async {
+      if (hash != null) {
+        final existing = await (select(orders)
+              ..where((o) => o.sourceScreenshotHash.equals(hash))
+              ..limit(1))
+            .get();
+        if (existing.isNotEmpty) return false;
+      }
+      await into(orders).insert(entry);
+      return true;
+    });
   }
 
   /// Most recent orders regardless of week, for the Letter Generator's
@@ -195,13 +199,18 @@ class AppDatabase extends _$AppDatabase {
   /// evidence item — same dedup reasoning as [insertOrderIfNew]: adding the
   /// same photo twice (by hand, or via the rate-cut auto-save) shouldn't
   /// create a second copy. Returns whether it actually inserted.
-  Future<bool> insertEvidenceIfNew(EvidenceItemsCompanion entry) async {
-    final existing = await (select(evidenceItems)
-          ..where((e) => e.fileHash.equals(entry.fileHash.value)))
-        .getSingleOrNull();
-    if (existing != null) return false;
-    await into(evidenceItems).insert(entry);
-    return true;
+  Future<bool> insertEvidenceIfNew(EvidenceItemsCompanion entry) {
+    // One transaction, so overlapping calls can't both pass the check;
+    // limit(1) because older versions could save duplicates.
+    return transaction(() async {
+      final existing = await (select(evidenceItems)
+            ..where((e) => e.fileHash.equals(entry.fileHash.value))
+            ..limit(1))
+          .get();
+      if (existing.isNotEmpty) return false;
+      await into(evidenceItems).insert(entry);
+      return true;
+    });
   }
 
   Stream<List<EvidenceItem>> watchAllEvidence() {

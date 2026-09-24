@@ -179,6 +179,7 @@ class BackupController extends ChangeNotifier {
       cloudBackupUnreadable = BackupProblem.damagedBackup;
     } catch (e) {
       problem = _classify(e);
+      debugPrint('AsliKamai: cloud check failed: $e');
     }
     notifyListeners();
   }
@@ -210,8 +211,9 @@ class BackupController extends ChangeNotifier {
       busy = false;
       await backupNow();
       return null;
-    } catch (e) {
+    } catch (e, st) {
       problem = _classify(e);
+      debugPrint('AsliKamai: restore failed: $e\n$st');
       rethrow;
     } finally {
       busy = false;
