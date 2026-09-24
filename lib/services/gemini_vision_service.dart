@@ -119,6 +119,8 @@ Rules:
   but never in the future relative to $todayIso, so use the year before instead if that would
   otherwise put it after today. If no date is visible at all, use today's date with the
   visible time, or null if no time is visible either.
+- date_visible: true only if a calendar date (day and month) is actually shown on screen;
+  false if you had to fall back to today's date.
 - order_ref: the order/trip ID shown on screen, or null if none is visible.
 - zone: the area/locality name shown on screen (e.g. "Koramangala"), or null.
 - If this does not look like a delivery-partner-app order screen at all, set
@@ -142,6 +144,7 @@ Rules:
       'distance_km': {'type': 'NUMBER', 'nullable': true},
       'duration_min': {'type': 'INTEGER', 'nullable': true},
       'zone': {'type': 'STRING', 'nullable': true},
+      'date_visible': {'type': 'BOOLEAN'},
     },
     'required': ['platform', 'base_pay', 'incentive', 'tip'],
   };
@@ -199,12 +202,12 @@ Rules:
       );
     }
 
+    final timestamp = DateTime.tryParse(parsed['timestamp'] as String? ?? '');
     return ParsedOrder(
       platform: GigPlatform.fromKey(parsed['platform'] as String? ?? 'other'),
       orderRef: parsed['order_ref'] as String?,
-      timestamp:
-          DateTime.tryParse(parsed['timestamp'] as String? ?? '') ??
-          DateTime.now(),
+      timestamp: timestamp ?? DateTime.now(),
+      dateMissing: timestamp == null || parsed['date_visible'] == false,
       basePay: (parsed['base_pay'] as num?)?.toDouble() ?? 0,
       incentive: (parsed['incentive'] as num?)?.toDouble() ?? 0,
       tip: (parsed['tip'] as num?)?.toDouble() ?? 0,

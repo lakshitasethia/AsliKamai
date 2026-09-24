@@ -218,6 +218,8 @@ class Strings {
   String exportToPdf(int count) =>
       _t('Export $count to PDF', '$count को PDF में एक्सपोर्ट करें', '$count ಅನ್ನು PDF ಗೆ ರಫ್ತು ಮಾಡಿ');
   String get saveAs => _t('Save as', 'इस रूप में सेव करें', 'ಹೀಗೆ ಉಳಿಸಿ');
+  String saveAsNumbered(int n, int of) =>
+      _t('Save document $n of $of as', 'दस्तावेज़ $n/$of इस रूप में सेव करें', 'ದಾಖಲೆ $n/$of ಹೀಗೆ ಉಳಿಸಿ');
   String get deleteThisDocument =>
       _t('Delete this document?', 'यह दस्तावेज़ हटाएं?', 'ಈ ದಾಖಲೆಯನ್ನು ಅಳಿಸುವುದೇ?');
   String get captured => _t('Captured', 'कैप्चर किया गया', 'ಸೆರೆಹಿಡಿಯಲಾಗಿದೆ');
@@ -308,6 +310,11 @@ class Strings {
         'आपके ऑर्डर और खर्च सिर्फ़ इस फ़ोन में रहते हैं, जब तक आप इन्हें चालू न करें.',
         'ನೀವು ಆನ್ ಮಾಡದ ಹೊರತು ನಿಮ್ಮ ಆರ್ಡರ್‌ಗಳು ಮತ್ತು ಖರ್ಚುಗಳು ಈ ಫೋನ್‌ನಲ್ಲೇ ಇರುತ್ತವೆ.',
       );
+  String get dateNotOnScreenshot => _t(
+        'Date not on screenshot — tap to set',
+        'स्क्रीनशॉट पर तारीख नहीं — सेट करने के लिए टैप करें',
+        'ಸ್ಕ್ರೀನ್‌ಶಾಟ್‌ನಲ್ಲಿ ದಿನಾಂಕ ಇಲ್ಲ — ಹೊಂದಿಸಲು ಟ್ಯಾಪ್ ಮಾಡಿ',
+      );
   String get signInWithGoogle => _t('Sign in with Google', 'Google से साइन इन करें', 'Google ಮೂಲಕ ಸೈನ್ ಇನ್ ಮಾಡಿ');
   String get backupNotSetUp => _t(
         'Cloud backup is not set up in this version of the app yet.',
@@ -340,6 +347,27 @@ class Strings {
   String get backUpNow => _t('Back up now', 'अभी बैकअप लें', 'ಈಗ ಬ್ಯಾಕಪ್ ಮಾಡಿ');
   String get backupDone => _t('Backup done.', 'बैकअप हो गया.', 'ಬ್ಯಾಕಪ್ ಆಗಿದೆ.');
   String get signOut => _t('Sign out', 'साइन आउट करें', 'ಸೈನ್ ಔಟ್ ಮಾಡಿ');
+  String get signOutTitle => _t('Sign out?', 'साइन आउट करें?', 'ಸೈನ್ ಔಟ್ ಮಾಡಬೇಕೆ?');
+  String signOutBody(String who) => _t(
+        'We\'ll back up one last time, then remove $who\'s data from this phone. It comes back when you sign in with $who again.',
+        'हम आखिरी बार बैकअप लेंगे, फिर $who का डेटा इस फ़ोन से हटा देंगे. $who से फिर साइन इन करने पर यह वापस आ जाएगा.',
+        'ಕೊನೆಯ ಬಾರಿ ಬ್ಯಾಕಪ್ ಮಾಡಿ, $who ಅವರ ಡೇಟಾವನ್ನು ಈ ಫೋನ್‌ನಿಂದ ತೆಗೆದುಹಾಕುತ್ತೇವೆ. $who ಮೂಲಕ ಮತ್ತೆ ಸೈನ್ ಇನ್ ಮಾಡಿದಾಗ ಅದು ಮರಳಿ ಬರುತ್ತದೆ.',
+      );
+  String get signOutOrdersNotBackedUp => _t(
+        'Your orders and expenses are not in the backup, so they will be deleted.',
+        'आपके ऑर्डर और खर्च बैकअप में नहीं हैं, इसलिए वे मिट जाएंगे.',
+        'ನಿಮ್ಮ ಆರ್ಡರ್‌ಗಳು ಮತ್ತು ಖರ್ಚುಗಳು ಬ್ಯಾಕಪ್‌ನಲ್ಲಿ ಇಲ್ಲ, ಆದ್ದರಿಂದ ಅವು ಅಳಿಸಿಹೋಗುತ್ತವೆ.',
+      );
+  String get signOutBackupOffBody => _t(
+        'Backup is off, so this phone\'s data will be deleted and can\'t be brought back.',
+        'बैकअप बंद है, इसलिए इस फ़ोन का डेटा मिट जाएगा और वापस नहीं आएगा.',
+        'ಬ್ಯಾಕಪ್ ಆಫ್ ಆಗಿದೆ, ಆದ್ದರಿಂದ ಈ ಫೋನ್‌ನ ಡೇಟಾ ಅಳಿಸಿಹೋಗುತ್ತದೆ ಮತ್ತು ಮರಳಿ ಬರುವುದಿಲ್ಲ.',
+      );
+  String get signOutBackupFailed => _t(
+        'Couldn\'t back up, so you\'re still signed in. Check your internet and try again.',
+        'बैकअप नहीं हो सका, इसलिए आप अभी भी साइन इन हैं. इंटरनेट चेक करके फिर कोशिश करें.',
+        'ಬ್ಯಾಕಪ್ ಆಗಲಿಲ್ಲ, ಆದ್ದರಿಂದ ನೀವು ಇನ್ನೂ ಸೈನ್ ಇನ್ ಆಗಿದ್ದೀರಿ. ಇಂಟರ್ನೆಟ್ ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+      );
   String get deleteCloudBackup =>
       _t('Delete cloud backup', 'क्लाउड बैकअप हटाएं', 'ಕ್ಲೌಡ್ ಬ್ಯಾಕಪ್ ಅಳಿಸಿ');
   String get deleteCloudBackupConfirm => _t(

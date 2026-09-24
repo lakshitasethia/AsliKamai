@@ -125,7 +125,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               title: S(context).noDataYet,
                               message: S(context).importScreenshotsPrompt,
                             )
-                          : _DashboardBody(data: snapshot.data!),
+                          : _DashboardBody(
+                              // New key per week, so switching weeks starts
+                              // at the top instead of keeping the old scroll.
+                              key: ValueKey(snapshot.data!.weekStart),
+                              data: snapshot.data!,
+                            ),
                 ),
               ],
             );
@@ -335,7 +340,7 @@ class _AllGoodRow extends StatelessWidget {
 }
 
 class _DashboardBody extends StatelessWidget {
-  const _DashboardBody({required this.data});
+  const _DashboardBody({super.key, required this.data});
 
   final WeeklyDashboardData data;
 

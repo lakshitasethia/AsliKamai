@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../data/database.dart';
 import '../l10n/strings.dart';
+import '../utils/relative_date.dart';
 import '../models/parsed_order.dart';
 import '../models/platform.dart';
 import '../theme/app_colors.dart';
@@ -201,13 +202,21 @@ class _OrderReviewCard extends StatelessWidget {
                   ].join(' • '),
                   style: AppTextStyles.bodyMuted,
                 ),
+                if (order.dateMissing)
+                  Text(S(context).dateNotOnScreenshot,
+                      style: AppTextStyles.bodyMuted.copyWith(color: AppColors.redAlert))
+                else
+                  Text(formatRelativeDate(order.timestamp, S(context)),
+                      style: AppTextStyles.bodyMuted),
               ],
             ),
           ),
           Text('₹${order.totalPay.toStringAsFixed(0)}',
               style: AppTextStyles.statNumber),
           const SizedBox(width: AppSpacing.xs),
-          const Icon(Icons.check_circle, color: AppColors.primaryGreen),
+          order.dateMissing
+              ? const Icon(Icons.edit_calendar, color: AppColors.redAlert)
+              : const Icon(Icons.check_circle, color: AppColors.primaryGreen),
         ],
       ),
     );
@@ -238,6 +247,28 @@ class _OrderEditSheetState extends State<_OrderEditSheet> {
   late final _zone = TextEditingController(text: widget.order.zone ?? '');
   late final _orderRef =
       TextEditingController(text: widget.order.orderRef ?? '');
+  late DateTime _timestamp = widget.order.timestamp;
+  late bool _dateMissing = widget.order.dateMissing;
+
+  Future<void> _pickDateTime() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _timestamp.isAfter(DateTime.now()) ? DateTime.now() : _timestamp,
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now(),
+    );
+    if (date == null || !mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_timestamp),
+    );
+    if (!mounted) return;
+    final t = time ?? TimeOfDay.fromDateTime(_timestamp);
+    setState(() {
+      _timestamp = DateTime(date.year, date.month, date.day, t.hour, t.minute);
+      _dateMissing = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -318,6 +349,18 @@ class _OrderEditSheetState extends State<_OrderEditSheet> {
               controller: _orderRef,
               decoration: InputDecoration(labelText: s.orderNumberFieldLabel),
             ),
+            const SizedBox(height: AppSpacing.sm),
+            InkWell(
+              onTap: _pickDateTime,
+              child: InputDecorator(
+                decoration: InputDecoration(
+                  labelText: s.orderDateLabel,
+                  suffixIcon: const Icon(Icons.edit_calendar),
+                  errorText: _dateMissing ? s.dateNotOnScreenshot : null,
+                ),
+                child: Text(formatRelativeDate(_timestamp, s)),
+              ),
+            ),
             const SizedBox(height: AppSpacing.lg),
             ElevatedButton(
               onPressed: () {
@@ -330,6 +373,8 @@ class _OrderEditSheetState extends State<_OrderEditSheet> {
                   ..durationMin = int.tryParse(_duration.text)
                   ..zone = _zone.text.isEmpty ? null : _zone.text
                   ..orderRef = _orderRef.text.isEmpty ? null : _orderRef.text
+                  ..timestamp = _timestamp
+                  ..dateMissing = _dateMissing
                   ..parseFailed = false;
                 Navigator.of(context).pop(widget.order);
               },

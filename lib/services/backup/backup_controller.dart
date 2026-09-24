@@ -11,6 +11,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/database.dart';
 import '../../models/platform.dart';
 import '../../models/rider_profile.dart';
+import '../wipe_local_data.dart';
 import 'backup_manifest.dart';
 import 'backup_remote.dart';
 import 'backup_service.dart';
@@ -170,6 +171,13 @@ class BackupController extends ChangeNotifier {
         // Nothing in the cloud to protect: link straight away.
         await _link();
         await backupNow();
+      } else if (await _phoneIsEmpty()) {
+        // Nothing here to lose (e.g. just switched accounts): bring this
+        // account's data back without asking.
+        cloudBackupAwaitingDecision = existing;
+        notifyListeners();
+        await restoreAndLink();
+        return;
       } else {
         cloudBackupAwaitingDecision = existing;
       }
@@ -294,6 +302,33 @@ class BackupController extends ChangeNotifier {
   Future<void> turnOn() async {
     await _setEnabled(true);
     await backupNow();
+  }
+
+  /// Sign out so another account can use this phone: back up one last
+  /// time, then clear this account's data off the phone — it comes back
+  /// when the account signs in again. Returns false (and sets [problem])
+  /// if the final backup failed; nothing is cleared then. A phone that was
+  /// never linked (restore/replace not chosen yet) just signs out.
+  Future<bool> signOutAndClearPhone() async {
+    final wasLinked = linked;
+    if (wasLinked && enabled) {
+      while (busy) {
+        await Future<void>.delayed(const Duration(milliseconds: 200));
+      }
+      await backupNow();
+      if (problem != null) return false;
+    }
+    await signOut();
+    if (wasLinked) await wipeAllLocalData();
+    return true;
+  }
+
+  Future<bool> _phoneIsEmpty() async {
+    final db = AppDatabase.instance;
+    return (await db.allOrders()).isEmpty &&
+        (await db.allExpenses()).isEmpty &&
+        (await db.allEvidence()).isEmpty &&
+        (await db.allLetters()).isEmpty;
   }
 
   Future<void> signOut() async {

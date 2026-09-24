@@ -58,18 +58,24 @@ class _EvidenceScreenState extends State<EvidenceScreen>
     if (files.isEmpty) return;
     if (!mounted) return;
 
-    final type = await showModalBottomSheet<EvidenceType>(
-      context: context,
-      backgroundColor: AppColors.cream,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => const _TypePickerSheet(),
-    );
-    if (type == null || !mounted) return;
-
+    // Ask per document: one pick may mix a payout slip with a block notice.
     var savedCount = 0;
-    for (final file in files) {
+    for (var i = 0; i < files.length; i++) {
+      final file = files[i];
+      final type = await showModalBottomSheet<EvidenceType>(
+        context: context,
+        backgroundColor: AppColors.cream,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (_) => _TypePickerSheet(
+          previewPath: files.length > 1 ? file.path : null,
+          position: files.length > 1 ? (i + 1, files.length) : null,
+        ),
+      );
+      if (type == null || !mounted) break; // dismissed: stop, keep what's saved
+
       final bytes = await File(file.path).readAsBytes();
       final hash = hashImageBytes(bytes);
       final path = await saveScreenshot(bytes: bytes, hash: hash);
@@ -82,6 +88,7 @@ class _EvidenceScreenState extends State<EvidenceScreen>
         ),
       );
       if (inserted) savedCount++;
+      if (!mounted) return;
     }
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -257,7 +264,9 @@ class _EvidenceTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: Image.file(File(item.filePath), fit: BoxFit.cover),
+              // Screenshots are tall and start with the useful part (app name,
+              // notice heading); a centred crop often shows only blank space.
+              child: Image.file(File(item.filePath), fit: BoxFit.cover, alignment: Alignment.topCenter),
             ),
             Padding(
               padding: const EdgeInsets.all(AppSpacing.sm),
@@ -292,26 +301,49 @@ class _EvidenceTile extends StatelessWidget {
 }
 
 class _TypePickerSheet extends StatelessWidget {
-  const _TypePickerSheet();
+  const _TypePickerSheet({this.previewPath, this.position});
+
+  /// Shown when several documents were picked, so the rider knows which
+  /// one they're choosing for.
+  final String? previewPath;
+  final (int, int)? position;
 
   @override
   Widget build(BuildContext context) {
+    final s = S(context);
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.screenPadding),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(S(context).saveAs, style: AppTextStyles.screenTitle),
-            const SizedBox(height: AppSpacing.md),
-            for (final type in EvidenceType.values)
-              ListTile(
-                leading: Icon(type.icon, color: AppColors.primaryGreen),
-                title: Text(S(context).evidenceTypeLabel(type.name)),
-                onTap: () => Navigator.of(context).pop(type),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                position == null ? s.saveAs : s.saveAsNumbered(position!.$1, position!.$2),
+                style: AppTextStyles.screenTitle,
               ),
-          ],
+              if (previewPath != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.file(
+                    File(previewPath!),
+                    height: 180,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.topCenter,
+                  ),
+                ),
+              ],
+              const SizedBox(height: AppSpacing.md),
+              for (final type in EvidenceType.values)
+                ListTile(
+                  leading: Icon(type.icon, color: AppColors.primaryGreen),
+                  title: Text(s.evidenceTypeLabel(type.name)),
+                  onTap: () => Navigator.of(context).pop(type),
+                ),
+            ],
+          ),
         ),
       ),
     );

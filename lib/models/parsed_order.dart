@@ -18,6 +18,7 @@ class ParsedOrder {
     this.sourceScreenshotHash,
     this.screenshotPath,
     this.parseFailed = false,
+    this.dateMissing = false,
   });
 
   GigPlatform platform;
@@ -38,6 +39,10 @@ class ParsedOrder {
   /// True when Gemini could not read this screenshot at all — the rider
   /// sees an inline error on this card instead of editable fields.
   bool parseFailed;
+
+  /// True when the screenshot showed no date, so [timestamp] is only a
+  /// guess (today) — the review screen asks the rider to set it.
+  bool dateMissing;
 
   double get totalPay => basePay + incentive + tip;
 }

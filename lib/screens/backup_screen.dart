@@ -83,6 +83,21 @@ class _BackupScreenState extends State<BackupScreen> {
     }
   }
 
+  Future<void> _signOut() async {
+    final s = S(context);
+    if (_backup.linked) {
+      final who = _backup.user?.email ?? '';
+      final body = !_backup.enabled
+          ? s.signOutBackupOffBody
+          : _backup.includeEarnings
+              ? s.signOutBody(who)
+              : '${s.signOutBody(who)}\n\n${s.signOutOrdersNotBackedUp}';
+      if (!await _confirm(s.signOutTitle, body, s.signOut)) return;
+    }
+    final ok = await _backup.signOutAndClearPhone();
+    if (!ok && mounted) _toast(s.signOutBackupFailed);
+  }
+
   Future<void> _restore() async {
     final s = S(context);
     try {
@@ -220,7 +235,7 @@ class _BackupScreenState extends State<BackupScreen> {
       if (_backup.awaitingDecision) ..._decision(s) else ..._settings(s),
       const SizedBox(height: AppSpacing.lg),
       OutlinedButton(
-        onPressed: _backup.busy ? null : _backup.signOut,
+        onPressed: _backup.busy ? null : _signOut,
         child: Text(s.signOut),
       ),
     ];
