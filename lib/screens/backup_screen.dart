@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../l10n/strings.dart';
 import '../services/backup/backup_controller.dart';
@@ -150,8 +149,7 @@ class _BackupScreenState extends State<BackupScreen> {
         BackupProblem.other => s.problemOther,
       };
 
-  String _when(Strings s, DateTime dt) =>
-      '${formatRelativeDate(dt, s)}, ${DateFormat.jm().format(dt)}';
+  String _when(Strings s, DateTime dt) => formatRelativeDate(dt, s);
 
   @override
   Widget build(BuildContext context) {

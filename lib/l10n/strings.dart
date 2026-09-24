@@ -315,9 +315,9 @@ class Strings {
         'ಆ್ಯಪ್‌ನ ಈ ಆವೃತ್ತಿಯಲ್ಲಿ ಕ್ಲೌಡ್ ಬ್ಯಾಕಪ್ ಇನ್ನೂ ಸಿದ್ಧವಾಗಿಲ್ಲ.',
       );
   String get signInFailed => _t(
-        'Couldn\'t sign in. Check your internet and try again.',
-        'साइन इन नहीं हो सका. इंटरनेट चेक करके फिर कोशिश करें.',
-        'ಸೈನ್ ಇನ್ ಆಗಲಿಲ್ಲ. ಇಂಟರ್ನೆಟ್ ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+        'Couldn\'t sign in. Check that this phone has a Google account and internet, then try again.',
+        'साइन इन नहीं हो सका. देखें कि इस फ़ोन में Google खाता और इंटरनेट है, फिर कोशिश करें.',
+        'ಸೈನ್ ಇನ್ ಆಗಲಿಲ್ಲ. ಈ ಫೋನ್‌ನಲ್ಲಿ Google ಖಾತೆ ಮತ್ತು ಇಂಟರ್ನೆಟ್ ಇದೆಯೇ ನೋಡಿ, ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
       );
   String signedInAs(String who) => _t('Signed in as $who', '$who के रूप में साइन इन', '$who ಆಗಿ ಸೈನ್ ಇನ್ ಆಗಿದೆ');
   String get backUpAutomatically =>
